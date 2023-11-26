@@ -38,7 +38,7 @@ void Coordinator::initialize()
         float startingTime = std::stof(line);
         EV << startingTime << endl;
 
-        // Schedule to send a message to the starting nod at the specified starting time
+        // Schedule a self message to send a message to the starting node
         scheduleAt(simTime() + startingTime, new cMessage(""));
     }
 }
@@ -46,5 +46,6 @@ void Coordinator::initialize()
 void Coordinator::handleMessage(cMessage *msg)
 {
     // TODO - Generated method body
+    // Send a message to the starting node to start sending
     send(new cMessage("Hey from coordinator"), "outs", nodeNumber);
 }

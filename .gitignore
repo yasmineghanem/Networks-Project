@@ -5,5 +5,6 @@
 .project
 Makefile
 out
-src/.exe
+src/GoBackN.exe
+src/GoBackN_dbg.exe
 .qtenvrc
