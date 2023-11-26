@@ -1,0 +1,9 @@
+.cproject
+.nedexclusions
+.nedfolders
+.oppbuildspec
+.project
+Makefile
+out
+src/.exe
+.qtenvrc
