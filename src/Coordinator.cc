@@ -27,8 +27,8 @@ void Coordinator::initialize()
     if (coordinatorFile.is_open()){
 
         // Read the starting node
-        nodeNumber = int(coordinatorFile.get()) - 48;
-        EV << nodeNumber << endl;
+        nodeID = int(coordinatorFile.get()) - 48;
+        EV << nodeID << endl;
 
         // Read the starting time
         std::string line;
@@ -47,5 +47,6 @@ void Coordinator::handleMessage(cMessage *msg)
 {
     // TODO - Generated method body
     // Send a message to the starting node to start sending
-    send(new cMessage("Hey from coordinator"), "outs", nodeNumber);
+    std::string initialMessage = "Hey from coordinator " + std::to_string(nodeID);
+    send(new cMessage(initialMessage.c_str()), "outs", nodeID);
 }

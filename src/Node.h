@@ -17,6 +17,10 @@
 #define __GOBACKN_NODE_H_
 
 #include <omnetpp.h>
+#include <string>
+#include <vector>
+#include <fstream>
+#include <bitset>
 
 using namespace omnetpp;
 
@@ -26,8 +30,12 @@ using namespace omnetpp;
 class Node : public cSimpleModule
 {
   protected:
+    int nodeID;
+    std::vector<std::string> messagesToSend;
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
+
+    void readFile(std::string fileName);
 };
 
 #endif
