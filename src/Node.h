@@ -32,10 +32,30 @@ class Node : public cSimpleModule
   protected:
     int nodeID;
     std::vector<std::string> messagesToSend;
+    static int sender;
+
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
 
+    // main functions
+    void sending();
+    void receiving();
+
+    // dealing with files functions
     void readFile(std::string fileName);
+    void writeFile();
+
+    // GoBackN protocol functions
+    void addHeader(std::string message);             // TODO: adds the header to the message to be sent
+    std::string frameMessage(std::string message);   // TODO: takes a message and frames it using byte stuffing
+    void calculateChecksum(std::string message);     // TODO: calculates the message checksum as an error detection technique
+    void handleError(std::bitset<4> errorCode);      // TODO: given an error code handles the message accordingly
+
+    // utility functions
+    std::vector<std::bitset<8> > convertToBinary(std::string String);        // TODO: converts any given string to binary
+    void sendMessage(std::string message, int time); // TODO: send the given message at the specified time
+    void printVector(std::vector<std::bitset<8> >);                // TODO: print a given vector
+
 };
 
 #endif

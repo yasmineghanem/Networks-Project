@@ -20,6 +20,7 @@ Define_Module(Node);
 void Node::initialize()
 {
     // TODO - Generated method body
+    EV << getIndex() << endl;
 }
 
 void Node::handleMessage(cMessage *msg)
@@ -44,6 +45,15 @@ void Node::handleMessage(cMessage *msg)
         this->readFile("input1.txt");
     }
 
+    // Message Framing
+    std::string framedMessage;
+    framedMessage = this->frameMessage("hello/$");
+    EV <<"Framed Message: "<< framedMessage << endl;
+
+    // output log to file and cancel and delete any messages in the system
+    this->writeFile();
+    cancelAndDelete(msg);
+
 }
 
 // read the messages from the given file
@@ -61,4 +71,54 @@ void Node::readFile(std::string fileName){
         }
     }
 
+}
+
+// TODO: write this function to write the system outputs as specified in the table in the document
+void Node::writeFile(){
+    // Create and open a text file
+    std::ofstream outputFile("../outputs/output.txt");
+
+    // Write to the file
+    outputFile << "output file";
+
+    // Close the file
+    outputFile.close();
+
+}
+
+// TODO: given a string (message) return the framed message to be sent
+// using the byte stuffing framing method
+
+std::string Node::frameMessage(std::string message){
+    std::string framedMessage = "$";
+
+    for(int i = 0; i < message.length(); i++){
+        if(message[i] == '/' || message[i] == '$')
+            framedMessage += '/';
+        framedMessage += message[i];
+    }
+
+    framedMessage += '$';
+    return framedMessage;
+}
+
+
+// TODO: given a string (message) return a vector of its binary representation
+std::vector<std::bitset<8> > Node::convertToBinary(std::string String){
+    std::vector<std::bitset<8> > binaryMessage;
+
+    for(int i = 0; i < String.length(); i++){
+        char character = String[i];
+        std::bitset<8> asciiBitset(character);
+        binaryMessage.push_back(asciiBitset);
+    }
+
+    return binaryMessage;
+}
+
+// prints a given vector
+void Node::printVector(std::vector<std::bitset<8> > Vector){
+    for(int i = 0; i < Vector.size(); i++){
+        EV << Vector[i] << endl;
+    }
 }

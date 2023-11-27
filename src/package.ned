@@ -17,18 +17,16 @@ network Network
 
         @display("bgb=518,279");
     submodules:
-        Node0: Node {
-            @display("p=91,68;i=device/pc");
-        }
-        Node1: Node {
-            @display("p=400,68;i=device/pc");
+        Nodes[2]: Node {
+
+            @display("p=102,97;i=device/pc");
         }
         coordinator: Coordinator {
-            @display("p=255,174;i=block/cogwheel");
+            @display("p=272,103;i=block/cogwheel");
         }
     connections:
-        Node0.port <--> Node1.port;
-        coordinator.outs[0] --> Node0.coordinatorIn;
-        coordinator.outs[1] --> Node1.coordinatorIn;
+        Nodes[0].port <--> Nodes[1].port;
+        coordinator.outs[0] --> Nodes[0].coordinatorIn;
+        coordinator.outs[1] --> Nodes[1].coordinatorIn;
 }
 
