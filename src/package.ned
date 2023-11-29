@@ -18,8 +18,7 @@ network Network
         @display("bgb=518,279");
     submodules:
         Nodes[2]: Node {
-
-            @display("p=102,97;i=device/pc");
+            @display("i=device/pc");
         }
         coordinator: Coordinator {
             @display("p=272,103;i=block/cogwheel");

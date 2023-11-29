@@ -17,9 +17,10 @@
 #define MESSAGE_H_
 
 #include <string>
+#include <omnetpp.h>
 
-class Message {
-    protected:
+class Message: public omnetpp::cMessage {
+    private:
         int header;           // the sequence number of the frame
         std::string payload;  // the actual message to be sent (characters)
         int trailer;          // the parity byte calculated
@@ -27,14 +28,17 @@ class Message {
         int number;           // lesa hanshoof
 
     public:
+        Message(const char *name = nullptr, int kind = 0) : cMessage(name, kind) {}
         Message();
         virtual ~Message();
 
+        // setters
         void setHeader(int sequenceNumber);
         void setPayload(std::string payload);
         void setTrailer(int parityByte);
         void setFrameType(int frameType);
 
+        //getters
         int getHeader();
         std::string getPayload();
         int getTrailer();

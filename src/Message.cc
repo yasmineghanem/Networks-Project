@@ -23,35 +23,35 @@ Message::~Message() {
     // TODO Auto-generated destructor stub
 }
 
-//void setHeader(int sequenceNumber){
-//    header = sequenceNumber;
-//}
-//
-//void setPayload(std::string payload){
-//    payload = payload;
-//}
-//
-//void setTrailer(int parityByte){
-//    trailer = parityByte;
-//}
-//
-//void setFrameType(int frameType){
-//    frameType = frameType;
-//}
-//
-//int getHeader(){
-//    return header;
-//}
-//
-//std::string getPayload(){
-//    return payload;
-//}
-//
-//int getTrailer(){
-//    return trailer;
-//}
-//
-//int getFrameType(){
-//    return frameType;
-//}
+void Message::setHeader(int sequenceNumber){
+    this->header = sequenceNumber;
+}
+
+void Message::setPayload(std::string payload){
+    this->payload = payload;
+}
+
+void Message::setTrailer(int parityByte){
+    this->trailer = parityByte;
+}
+
+void Message::setFrameType(int frameType){
+    this->frameType = frameType;
+}
+
+int Message::getHeader(){
+    return header;
+}
+
+std::string Message::getPayload(){
+    return payload;
+}
+
+int Message::getTrailer(){
+    return trailer;
+}
+
+int Message::getFrameType(){
+    return frameType;
+}
 
