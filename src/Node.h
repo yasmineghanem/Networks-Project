@@ -36,6 +36,7 @@ private:
   protected:
 
     std::vector<std::string> messagesToSend;
+    std::vector<std::string> errorCodes;
     static int sender;
 
     virtual void initialize();

@@ -87,8 +87,8 @@ void Node::sendingProtocol(){
 
         // 2. apply framing using byte stuffing
         std::string framedMessage;
-        framedMessage = this->frameMessage("hell");
-        EV <<"Framed Message: "<< framedMessage << endl;
+        framedMessage = this->frameMessage(messagesToSend[i]);
+//        EV <<"Framed Message: "<< framedMessage << endl;
 
         // set the message payload to the framed message
         currentMessage->setPayload(framedMessage);
@@ -96,18 +96,18 @@ void Node::sendingProtocol(){
         // 3. calculate the sequence number and add it to the header
         sequenceNumber = i % getParentModule()->par("WS").intValue();
         currentMessage->setHeader(sequenceNumber);
-        EV << "Sequence Number: " << sequenceNumber << endl;
+//        EV << "Sequence Number: " << sequenceNumber << endl;
 
         // 4. calculate the checksum and add it to message trailer
         parityByte = this->calculateChecksum(framedMessage);
         parity = (int)(parityByte.to_ulong());
-        EV << "Parity number "<< parity << endl;
+//        EV << "Parity number "<< parity << endl;
         currentMessage->setTrailer(parity);
 
         send(currentMessage, "port$o");
 
         // for testing purposes
-        break;
+//        break;
     }
 
 }
@@ -129,11 +129,20 @@ void Node::readFile(std::string fileName){
     inputFile.open("../inputs/" + fileName);
 
     std::string message;
+    std::string errorCode;
 
     if(inputFile.is_open()){
         while (!inputFile.eof()){
+            errorCode = "";
+            for(int i = 0; i < 4; i++){
+                errorCode += inputFile.get();
+            }
+            inputFile.get();
             std::getline(inputFile, message);
             messagesToSend.push_back(message);
+            errorCodes.push_back(errorCode);
+
+            EV << errorCode << endl;
             EV << message << endl;
         }
     }
@@ -206,7 +215,7 @@ std::vector<std::bitset<8> > Node::convertToBinary(std::string String){
         char character = String[i];
         std::bitset<8> asciiBitset(character);
         binaryMessage.push_back(asciiBitset);
-        EV << asciiBitset << endl;
+//        EV << asciiBitset << endl;
     }
 
     return binaryMessage;
