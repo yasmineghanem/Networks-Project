@@ -22,15 +22,13 @@ int Node::sender = 0;
 void Node::initialize()
 {
     // TODO - Generated method body
-    //    std::string message = "message";
-    //    std::string *messageptr = &message;
-    //    EV << *messageptr << endl;
     nodeID = getIndex();
     startWindow = 0;
     currentIndex = startWindow;
     endWindow = getParentModule()->par("WS").intValue() - 1;
     PT = getParentModule()->par("PT").doubleValue();
     TD = getParentModule()->par("TD").doubleValue();
+    WS = getParentModule()->par("WS").intValue();
 }
 
 void Node::handleMessage(cMessage *msg)
@@ -54,7 +52,7 @@ void Node::handleMessage(cMessage *msg)
         this->readFile("input" + std::to_string(sender) + ".txt");
         this->start = messagesToSend.begin();
         // EV << *(this->start) << endl;
-        this->end = this->start + getParentModule()->par("WS").intValue() - 1;
+        this->end = this->start + WS - 1;
         // EV << *(this->end) << endl;
         processDataToSend();
     }
@@ -65,12 +63,21 @@ void Node::handleMessage(cMessage *msg)
         // we will call the sending protocol function -> handle the message as the sender
         if (msg->isSelfMessage())
         {
+            // if the self message sent is because of loss of frame
+            if (strcmp(msg->getName(), "LOSS") == 0)
+            {
+                currentIndex++;
+                processDataToSend();
+            }
             // send processed message OR send duplicate
             // The the sender should send the message at the scheduled time
-            if (currentIndex <= endWindow)
+            else
             {
-                send(msg, "port$o");
-                currentIndex++;
+                if (currentIndex >= startWindow && currentIndex <= endWindow)
+                {
+                    send(msg, "port$o");
+                    currentIndex++;
+                }
             }
         }
         else if (strcmp(msg->getName(), "ACK") == 0)
@@ -80,6 +87,16 @@ void Node::handleMessage(cMessage *msg)
             // EV << "Sender: " << msg->getName() << endl;
             processDataToSend();
         }
+        else if (strcmp(msg->getName(), "NACK") == 0)
+        {
+            // receive the NACK
+            EV << msg->getName() << endl;
+            Message *receivedNack = dynamic_cast<Message *>(msg);
+            receiveNack(receivedNack);
+            // process and send the lost data
+            processDataToSend();
+        }
+        EV << "START: " << startWindow << " END: " << endWindow << " CURRENT: " << currentIndex << endl;
     }
     else
     {
@@ -96,7 +113,6 @@ void Node::handleMessage(cMessage *msg)
             // either receive the sent frame and process it -> deframe
             Message *receivedMessage = dynamic_cast<Message *>(msg);
             processReceivedData(receivedMessage);
-            // or send the ACK/NACK
         }
     }
 
@@ -119,6 +135,18 @@ void Node::processDataToSend()
     // 5. calculate the checksum and add it as the parity byte to the trailer
     // 6. check the error code and handle error accordingly -> need to know how exactly
     // don't forget to update the current sequence number and check the window size
+
+    // Error messaeg handling
+    bool modification, loss, duplication, delay;
+
+    handleError(errorCodes[currentIndex], modification, loss, duplication, delay);
+
+    // if the loss bit is 1 then the message will not be sent
+    if (loss)
+    {
+        scheduleAt(simTime(), new cMessage("LOSS"));
+        return;
+    }
 
     // declarations needed throughout the function
     int sequenceNumber = 0; // the sequence number of the frame max = WS - 1 then reset
@@ -143,8 +171,8 @@ void Node::processDataToSend()
     currentMessage->setPayload(framedMessage);
 
     // 3. calculate the sequence number and add it to the header
-    // sequenceNumber = 0 % getParentModule()->par("WS").intValue();
-    sequenceNumber = currentIndex % getParentModule()->par("WS").intValue();
+    // sequenceNumber = 0 % WS;
+    sequenceNumber = currentIndex % WS;
     currentMessage->setHeader(sequenceNumber);
     //        EV << "Sequence Number: " << sequenceNumber << endl;
 
@@ -168,6 +196,16 @@ void Node::processReceivedData(Message *msg)
     // 2. deframe the received message
     // 3. send the ack
 
+    // check that the received message is the one the receiver is witing for
+    if (msg->getHeader() != ackNumber) // the received message is the intended message
+    {
+        // messages where lost in the system
+        // send NACK with the message we're waiting for
+        // return -> don't process the message
+        sendNack();
+        return;
+    }
+
     std::string receivedMessage = msg->getPayload();
 
     // 1. get the parity and calculate the checksum to detect if there is an error
@@ -177,6 +215,7 @@ void Node::processReceivedData(Message *msg)
     if (error)
     {
         // do something
+        // send Nack for the errored frame
     }
 
     // 2. deframe the received message
@@ -184,17 +223,31 @@ void Node::processReceivedData(Message *msg)
 
     EV << "Message Received: " << originalMessage << endl;
 
-    sendAck(msg->getHeader());
+    receivedMessages.push_back(msg);
+
+    ackNumber = (ackNumber + 1) % WS;
+
+    sendAck();
 }
 
-void Node::sendAck(int ackNumber)
+void Node::sendAck()
 {
     // TODO: send the ack of the received protocol
     Message *ack = new Message("ACK");
     ack->setFrameType(1);
-    ack->setAckNack((ackNumber + 1) % getParentModule()->par("WS").intValue());
+    ack->setAckNack(ackNumber);
 
     scheduleAt(simTime() + PT + TD, ack);
+}
+
+void Node::sendNack()
+{
+    // TODO: send the ack of the received protocol
+    Message *nack = new Message("NACK");
+    nack->setFrameType(0);
+    nack->setAckNack(ackNumber % WS);
+    EV << "NACK NUMBER: " << nack->getAckNack() << endl;
+    scheduleAt(simTime() + PT + TD, nack);
 }
 
 void Node::receiveAck(Message *msg)
@@ -205,6 +258,19 @@ void Node::receiveAck(Message *msg)
     endWindow++;
     start++;
     end++;
+}
+
+void Node::receiveNack(Message *msg)
+{
+    // TODO: receive the ack from the receiver
+    int NACK = msg->getAckNack();
+    EV << "NACK Number: " << NACK << endl;
+    // adjust the current index and the window start and end inidices
+    currentIndex = startWindow;
+    while (currentIndex % WS != NACK)
+        currentIndex++;
+    // adjust the error code of the nack frame -> avoid infinate loop
+    errorCodes[currentIndex] = "0000";
 }
 
 // ---------------------------------- FILE FUNCTIONS ---------------------------------- //
@@ -350,6 +416,41 @@ bool Node::detectError(std::string message, int checksum)
     if ((int)(sums[sums.size() - 1].flip().to_ulong()) == 0)
         return false;
     return true;
+}
+
+void Node::handleError(std::string errorCode, bool &modification, bool &loss, bool &duplication, bool &delay)
+{
+    // 4 bits
+    // 0 -> Modification
+    // 1 -> Loss
+    // 2 -> Duplication
+    // 3 -> Delay
+
+    // Strategy:
+    // Loss overrules all
+    // Duplication -> send again
+    // Modification -> modify before sending
+    // Delay -> send after longer time (check for timeout)
+    if (errorCode[0] == '1')
+    {
+        modification = true;
+    }
+
+    if (errorCode[1] == '1')
+    {
+        loss = true;
+    }
+
+    if (errorCode[2] == '1')
+    {
+        duplication = true;
+    }
+
+    if (errorCode[3] == '1')
+    {
+        delay = true;
+    }
+    EV << "ERROR CODE: " << errorCode << " LOSS: " << loss << endl;
 }
 
 // ---------------------------------- UTILITY FUNCTIONS ---------------------------------- //

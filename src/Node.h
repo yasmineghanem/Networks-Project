@@ -35,8 +35,14 @@ private:
   int nodeID;
 
 protected:
+  // sender
   std::vector<std::string> messagesToSend;
   std::vector<std::string> errorCodes;
+  int WS;
+
+  // receiver
+  std::vector<Message *> receivedMessages;
+  int ackNumber = 0;
 
   // system indices
   int startWindow;
@@ -61,20 +67,22 @@ public:
   // main functions
   void processDataToSend();
   void processReceivedData(Message *msg);
-  void sendAck(int ackNumber);
+  void sendAck();
+  void sendNack();
   void receiveAck(Message *msg);
+  void receiveNack(Message *msg);
 
   // dealing with files functions
   void readFile(std::string fileName);
   void writeFile();
 
   // GoBackN protocol functions
-  void addHeader(std::string message);                   // TODO: adds the header to the message to be sent
-  std::string frameMessage(std::string message);         // TODO: takes a message and frames it using byte stuffing
-  std::bitset<8> calculateChecksum(std::string message); // TODO: calculates the message checksum as an error detection technique
-  bool detectError(std::string message, int checksum);   // TODO: calculates the message checksum as an error detection technique
-  void handleError(std::bitset<4> errorCode);            // TODO: given an error code handles the message accordingly
-  std::string deframeMessage(std::string message);       // TODO: defram the received message
+  void addHeader(std::string message);                                     // TODO: adds the header to the message to be sent
+  std::string frameMessage(std::string message);                           // TODO: takes a message and frames it using byte stuffing
+  std::bitset<8> calculateChecksum(std::string message);                   // TODO: calculates the message checksum as an error detection technique
+  bool detectError(std::string message, int checksum);                     // TODO: calculates the message checksum as an error detection technique
+  void handleError(std::string errorCode, bool &, bool &, bool &, bool &); // TODO: given an error code handles the message accordingly
+  std::string deframeMessage(std::string message);                         // TODO: defram the received message
 
   // utility functions
   std::vector<std::bitset<8>> convertToBinary(std::string String); // TODO: converts any given string to binary
