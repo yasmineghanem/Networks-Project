@@ -21,6 +21,7 @@
 #include <vector>
 #include <fstream>
 #include <bitset>
+#include <sstream>
 
 #include "Message.h"
 
@@ -77,12 +78,14 @@ public:
   void writeFile();
 
   // GoBackN protocol functions
-  void addHeader(std::string message);                                     // TODO: adds the header to the message to be sent
-  std::string frameMessage(std::string message);                           // TODO: takes a message and frames it using byte stuffing
-  std::bitset<8> calculateChecksum(std::string message);                   // TODO: calculates the message checksum as an error detection technique
-  bool detectError(std::string message, int checksum);                     // TODO: calculates the message checksum as an error detection technique
-  void handleError(std::string errorCode, bool &, bool &, bool &, bool &); // TODO: given an error code handles the message accordingly
-  std::string deframeMessage(std::string message);                         // TODO: defram the received message
+  void addHeader(std::string message);                                   // TODO: adds the header to the message to be sent
+  std::string frameMessage(std::string message);                         // TODO: takes a message and frames it using byte stuffing
+  std::bitset<8> calculateChecksum(std::string message);                 // TODO: calculates the message checksum as an error detection technique
+  bool detectError(std::string message, int checksum);                   // TODO: calculates the message checksum as an error detection technique
+  void getErrors(std::string errorCode, bool &, bool &, bool &, bool &); // TODO: given an error code handles the message accordingly
+  void handleErrors(std::string errorCode, bool, bool, bool, bool);      // TODO: given an error code handles the message accordingly
+  std::string deframeMessage(std::string message);                       // TODO: defram the received message
+  void modifyMessage(Message *msg);
 
   // utility functions
   std::vector<std::bitset<8>> convertToBinary(std::string String); // TODO: converts any given string to binary

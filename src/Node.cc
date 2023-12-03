@@ -139,7 +139,7 @@ void Node::processDataToSend()
     // Error messaeg handling
     bool modification, loss, duplication, delay;
 
-    handleError(errorCodes[currentIndex], modification, loss, duplication, delay);
+    getErrors(errorCodes[currentIndex], modification, loss, duplication, delay);
 
     // if the loss bit is 1 then the message will not be sent
     if (loss)
@@ -185,6 +185,11 @@ void Node::processDataToSend()
 
     EV << "Message Sent: " << messagesToSend[currentIndex] << endl;
 
+    if (modification)
+    {
+        modifyMessage(currentMessage);
+    }
+
     // send the processed message after the specified processing time
     scheduleAt(simTime() + PT + TD, currentMessage);
 }
@@ -216,6 +221,8 @@ void Node::processReceivedData(Message *msg)
     {
         // do something
         // send Nack for the errored frame
+        sendNack();
+        return;
     }
 
     // 2. deframe the received message
@@ -418,7 +425,7 @@ bool Node::detectError(std::string message, int checksum)
     return true;
 }
 
-void Node::handleError(std::string errorCode, bool &modification, bool &loss, bool &duplication, bool &delay)
+void Node::getErrors(std::string errorCode, bool &modification, bool &loss, bool &duplication, bool &delay)
 {
     // 4 bits
     // 0 -> Modification
@@ -450,7 +457,99 @@ void Node::handleError(std::string errorCode, bool &modification, bool &loss, bo
     {
         delay = true;
     }
-    EV << "ERROR CODE: " << errorCode << " LOSS: " << loss << endl;
+    EV << "ERROR CODE: " << errorCode << " LOSS: " << loss << " MODIFICATION: " << modification <<endl;
+}
+
+void Node::handleErrors(std::string errorCode, bool loss, bool modification, bool dupliaction, bool delay)
+{
+    if (loss)
+    {
+        return;
+    }
+
+    if (modification && dupliaction && delay)
+    {
+        // handle this error
+        return;
+    }
+
+    if (modification && dupliaction)
+    {
+        // handle this error
+        return;
+    }
+
+    if (modification && delay)
+    {
+        // handle this error
+        return;
+    }
+
+    if (dupliaction && delay)
+    {
+        // handle this error
+        return;
+    }
+
+    if (modification)
+    {
+        // handle modification error
+        return;
+    }
+
+    if (dupliaction)
+    {
+        // handle duplication error
+        return;
+    }
+
+    if (delay)
+    {
+        // handle delay error
+        return;
+    }
+}
+
+void Node::modifyMessage(Message *msg)
+{
+
+    std::string payload = msg->getPayload();
+    EV << "TEST MODIFY MESSAGE" << endl;
+    EV << "Payload: " << payload << endl;
+
+    // first convert the message into binary vector
+    std::vector<std::bitset<8>> binaryBitset = this->convertToBinary(payload);
+    std::string binaryMessage = "";
+
+    // convert the vector to a continuous string
+    for (int i = 0; i < binaryBitset.size(); i++)
+    {
+        binaryMessage += binaryBitset[i].to_string();
+    }
+
+    // get a random bit in the message to modify
+    int errorBit = int(uniform(0, binaryMessage.length()));
+    if (binaryMessage[errorBit] == '0')
+    {
+        binaryMessage[errorBit] = '1';
+    }
+    else
+    {
+        binaryMessage[errorBit] = '0';
+    }
+
+    std::string modifiedMessage = "";
+    // convert the message to its original form again
+    std::istringstream in(binaryMessage);
+    std::bitset<8> bs;
+    while (in >> bs)
+    {
+        modifiedMessage += char(bs.to_ulong());
+    }
+
+    msg->setPayload(modifiedMessage);
+
+    EV << "MODIFIED MESSAGE: " << modifiedMessage << endl;
 }
 
 // ---------------------------------- UTILITY FUNCTIONS ---------------------------------- //
