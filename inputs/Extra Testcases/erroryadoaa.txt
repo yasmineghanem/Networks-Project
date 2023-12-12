@@ -1,0 +1,4 @@
+1000 this is the first message 
+1000 this is the second message
+0100 this is the third message and it's supposed to be lost
+0100 this is the fourth message and it's also supposed to be lost

@@ -3,15 +3,15 @@
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
-// 
+//
 
 #include "Coordinator.h"
 
@@ -24,7 +24,8 @@ void Coordinator::initialize()
     // Open the coordinator file and get the starting info
     std::ifstream coordinatorFile;
     coordinatorFile.open("../inputs/coordinator.txt");
-    if (coordinatorFile.is_open()){
+    if (coordinatorFile.is_open())
+    {
 
         // Read the starting node
         nodeID = int(coordinatorFile.get()) - 48;
@@ -38,8 +39,11 @@ void Coordinator::initialize()
         float startingTime = std::stof(line);
         EV << startingTime << endl;
 
+        CustomMessage_Base *coordinator = new CustomMessage_Base("Coordinator");
+        coordinator->setFrameType(-1);
+        coordinator->setHeader(nodeID);
         // Schedule a self message to send a message to the starting node
-        scheduleAt(simTime() + startingTime, new cMessage(""));
+        scheduleAt(simTime() + startingTime, coordinator);
     }
 }
 
@@ -47,6 +51,5 @@ void Coordinator::handleMessage(cMessage *msg)
 {
     // TODO - Generated method body
     // Send a message to the starting node to start sending
-    std::string initialMessage = "Hey from coordinator " + std::to_string(nodeID);
-    send(new cMessage(initialMessage.c_str()), "outs", nodeID);
+    send(msg, "outs", nodeID);
 }

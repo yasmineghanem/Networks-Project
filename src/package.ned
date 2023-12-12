@@ -8,7 +8,7 @@ network Network
 {
     parameters:
         int WS = default(3);		// The sender window size
-        int TO = default(10);		// The timeout interval
+        double TO = default(10.0);		// The timeout interval
         double PT = default(0.5);	// The sender's and receiver's processing time
         double TD = default(1.0);	// The transmission delay
         double ED = default(4.0); 	// The error delay

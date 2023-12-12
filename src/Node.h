@@ -22,8 +22,11 @@
 #include <fstream>
 #include <bitset>
 #include <sstream>
+#include <ctime>
+#include <random>
 
 #include "Message.h"
+#include "customMessage_m.h"
 
 using namespace omnetpp;
 
@@ -42,8 +45,10 @@ protected:
   int WS;
 
   // receiver
-  std::vector<Message *> receivedMessages;
+  std::vector<CustomMessage_Base *> receivedMessages;
   int ackNumber = 0;
+  bool nackSent = false;
+  int expectedFrameNack;
 
   // system indices
   int startWindow;
@@ -51,15 +56,25 @@ protected:
   int currentIndex;
 
   // system pointers
+  // messages pointers
   std::vector<std::string>::iterator start;
   std::vector<std::string>::iterator end;
+  std::vector<std::string>::iterator current;
+
+  // error codes pointers
+  std::vector<std::string>::iterator startError;
+  std::vector<std::string>::iterator endError;
+  std::vector<std::string>::iterator currentError;
 
   static int sender;
 
   // Delays in the system
-  double PT;
-  double ED;
-  double TD;
+  double PT; // message processing time
+  double ED; // message error delay
+  double TD; // message transmission delay
+  double DD; // message duplication delay
+  double TO; // timeout
+  double LP; // ack/nack loss probabilty
 
   virtual void initialize();
   virtual void handleMessage(cMessage *msg);
@@ -67,11 +82,11 @@ protected:
 public:
   // main functions
   void processDataToSend();
-  void processReceivedData(Message *msg);
+  void processReceivedData(CustomMessage_Base *msg);
   void sendAck();
   void sendNack();
-  void receiveAck(Message *msg);
-  void receiveNack(Message *msg);
+  void receiveAck(CustomMessage_Base *msg);
+  void receiveNack(CustomMessage_Base *msg);
 
   // dealing with files functions
   void readFile(std::string fileName);
@@ -83,9 +98,10 @@ public:
   std::bitset<8> calculateChecksum(std::string message);                 // TODO: calculates the message checksum as an error detection technique
   bool detectError(std::string message, int checksum);                   // TODO: calculates the message checksum as an error detection technique
   void getErrors(std::string errorCode, bool &, bool &, bool &, bool &); // TODO: given an error code handles the message accordingly
-  void handleErrors(std::string errorCode, bool, bool, bool, bool);      // TODO: given an error code handles the message accordingly
+  void handleErrors(std::string errorCode, CustomMessage_Base *);        // TODO: given an error code handles the message accordingly
   std::string deframeMessage(std::string message);                       // TODO: defram the received message
-  void modifyMessage(Message *msg);
+  void modifyMessage(CustomMessage_Base *msg);
+  void handleTimeout();
 
   // utility functions
   std::vector<std::bitset<8>> convertToBinary(std::string String); // TODO: converts any given string to binary

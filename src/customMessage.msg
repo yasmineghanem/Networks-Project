@@ -13,26 +13,14 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-#ifndef __GOBACKN_COORDINATOR_H_
-#define __GOBACKN_COORDINATOR_H_
-
-#include <omnetpp.h>
-#include <fstream>
-#include <string>
-
-#include "customMessage_m.h"
-
-using namespace omnetpp;
-
-/**
- * TODO - Generated class
- */
-class Coordinator : public cSimpleModule
-{
-  protected:
-    int nodeID;
-    virtual void initialize();
-    virtual void handleMessage(cMessage *msg);
-};
-
-#endif
+//
+// TODO generated message class
+//
+packet CustomMessage {
+    @customize(true);  // see the generated C++ header for more info
+    int header;
+    string payload;
+    int trailer;
+    int frameType;
+    int ackNack;
+}
