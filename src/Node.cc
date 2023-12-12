@@ -37,18 +37,24 @@ void Node::initialize()
     startWindow = 0;
     currentIndex = startWindow;
     endWindow = WS - 1;
+
+    // Logger::open()
+    Logger::open("../outputs/output.txt");
 }
 
 void Node::handleMessage(cMessage *msg)
 {
+    // Logger::open("../outputs/output.txt");
+
     // cast the received message to our custom message
     CustomMessage_Base *receivedMessage = dynamic_cast<CustomMessage_Base *>(msg);
     // TODO - Generated method body
 
     // check first if the message is sent from the coordinator
     // initial message from the coordinator
-    if (receivedMessage->getFrameType() == -1)
+    if (receivedMessage->getFrameType() == -1) // coordinator
     {
+
         EV << "COORDINATOR" << endl;
         // message is from the coordinator then this node should start
         // assign the starting node from the coordinator to the sender
@@ -99,7 +105,6 @@ void Node::handleMessage(cMessage *msg)
                     {
                         processDataToSend();
                     }
-
                 }
                 else
                 {
@@ -133,7 +138,7 @@ void Node::handleMessage(cMessage *msg)
             // call the receiving protocol function -> handle the message as the receiver
             if (receivedMessage->getFrameType() == 1 || receivedMessage->getFrameType() == 0) // frametype for ack either end processing or transmit
             {
-
+                std::string log;
                 // EV << "SENDING ACK" << endl;
                 if (strcmp(receivedMessage->getName(), "End Processing") == 0)
                 {
@@ -141,13 +146,22 @@ void Node::handleMessage(cMessage *msg)
 
                     // ha3mel haraka ghabeya delwa2ty hagarab haga
                     if (receivedMessage->getFrameType() == 1)
+                    {
+
                         EV << "ACK " << receivedMessage->getAckNack() << " DONE PROCESSING AT " << simTime() << endl;
+                        log = "At time " + simTime().str() + " node with ID = " + std::to_string(nodeID) + " started sending time after processing sending ACK with number " + std::to_string(receivedMessage->getAckNack()) + " and LOSS = YES/NO \n";
+                    }
                     else
                     {
+                        log = "At time " + simTime().str() + " node with ID = " + std::to_string(nodeID) + " started sending time after processing sending NACK with number " + std::to_string(receivedMessage->getAckNack()) + " and LOSS = YES/NO \n";
                         EV << "NACK " << receivedMessage->getAckNack() << " DONE PROCESSING AT " << simTime() << endl;
                         nackSent = true;
                     }
                     // EV << "N/ACK DONE PROCESSING AT " << simTime() << endl;
+
+                    // output
+                    Logger::write(log);
+
                     scheduleAt(simTime() + TD, msg);
                 }
                 else
@@ -169,6 +183,7 @@ void Node::handleMessage(cMessage *msg)
             }
         }
     }
+    // Logger::close();
 }
 
 // ---------------------------------- MAIN FUNCTIONS ---------------------------------- //
@@ -235,6 +250,10 @@ void Node::processDataToSend()
     currentMessage->setName("End Processing");
     scheduleAt(simTime() + PT, currentMessage);
     EV << " MESSAGE START PROCESSING AT " << simTime() << endl;
+
+    // output to log file
+    std::string log = "At time " + simTime().str() + " node with ID = " + std::to_string(nodeID) + " started processing, introducing channel error with code = " + errorCodes[currentIndex] + "\n";
+    Logger::write(log);
 }
 
 void Node::processReceivedData(CustomMessage_Base *msg)
@@ -245,19 +264,19 @@ void Node::processReceivedData(CustomMessage_Base *msg)
     // 3. send the ack
 
     // check that the received message is the one the receiver is witing for
-    if (msg->getHeader() != ackNumber) // the received message is the intended message
+    if (msg->getHeader() != n_ackNumber) // the received message is the intended message
     {
         // messages where lost in the system
         // send NACK with the message we're waiting for
         // return -> don't process the message
         // if (!nackSent)
         // {
-            EV << "MESSAGE NOT RECEIVED DIFFERENT SEQUENCE NUMBER" << endl;
-            sendNack();
+        EV << "MESSAGE NOT RECEIVED DIFFERENT SEQUENCE NUMBER" << endl;
+        sendNack();
         // }
         return;
     }
-    nackSent = false;
+    // nackSent = false;
 
     std::string receivedMessage = msg->getPayload();
 
@@ -279,11 +298,14 @@ void Node::processReceivedData(CustomMessage_Base *msg)
 
     EV << "MESSAGE RECEIVED: " << originalMessage << endl;
 
+    std::string log = "At time " + simTime().str() + " node with ID = " + std::to_string(nodeID) + " received correct message and uploading PAYLOAD = " + originalMessage + " with SEQ_NUM = " + std::to_string(msg->getHeader()) + " to the network layer\n";
+    Logger::write(log);
+
     receivedMessages.push_back(msg);
 
     cancelAndDelete(msg);
 
-    ackNumber = (ackNumber + 1) % WS;
+    n_ackNumber = (n_ackNumber + 1) % WS;
 
     sendAck();
 }
@@ -293,9 +315,14 @@ void Node::sendAck()
     // TODO: send the ack of the received protocol
     CustomMessage_Base *ack = new CustomMessage_Base("ACK");
     ack->setFrameType(1);
-    ack->setAckNack(ackNumber);
+    ack->setAckNack(n_ackNumber);
     ack->setName("End Processing");
-    EV << "ACK " << ackNumber << " START PROCESSING" << endl;
+    EV << "ACK " << n_ackNumber << " START PROCESSING" << endl;
+
+    // output to log file
+    std::string log = "At time " + simTime().str() + " node with ID = " + std::to_string(nodeID) + " started processing ACK with NUMBER = " + std::to_string(n_ackNumber) + "\n";
+    Logger::write(log);
+
     scheduleAt(simTime() + PT, ack);
 }
 
@@ -304,10 +331,15 @@ void Node::sendNack()
     // TODO: send the ack of the received protocol
     CustomMessage_Base *nack = new CustomMessage_Base("NACK");
     nack->setFrameType(0);
-    expectedFrameNack = ackNumber % WS;
-    nack->setAckNack(expectedFrameNack);
+    // expectedFrameNack = n_ackNumber % WS;
+    nack->setAckNack(n_ackNumber % WS);
     nack->setName("End Processing");
-    EV << "NACK " << ackNumber << " START PROCESSING" << endl;
+    EV << "NACK " << n_ackNumber << " START PROCESSING" << endl;
+
+    // output to log file
+    std::string log = "At time " + simTime().str() + " node with ID = " + std::to_string(nodeID) + " started processing NACK with NUMBER = " + std::to_string(n_ackNumber) + "\n";
+    Logger::write(log);
+
     scheduleAt(simTime() + PT, nack);
 }
 
@@ -547,6 +579,11 @@ void Node::handleErrors(std::string errorCode, CustomMessage_Base *msg)
 
     EV << "ERROR CODE: " << errorCodes[currentIndex] << " LOSS: " << loss << " MODIFICATION: " << modification << " DUPLICATION: " << duplication << " DELAY: " << delay << endl;
 
+    // output to log file
+    std::string log = "At time " + simTime().str() + " node with ID = " + std::to_string(nodeID) + " started sending time after processing, sent frame with SEQ_NUM = " + std::to_string(msg->getHeader()) + " and PAYLOAD = " + msg->getPayload() + " and TRAILER = " + std::to_string(msg->getTrailer()) + "\n";
+    log = log + " MODIFIED " + std::to_string(modification) + " LOST " + std::to_string(loss) + " DUPLICATED " + std::to_string(duplication) + " DELAY " + std::to_string(delay) + "\n";
+    Logger::write(log);
+
     if (loss)
     {
         // don't send anything
@@ -566,7 +603,7 @@ void Node::handleErrors(std::string errorCode, CustomMessage_Base *msg)
         return;
     }
 
-    if (modification && duplication)
+    else if (modification && duplication)
     {
         // handle this error
         // 1. modify message
@@ -579,7 +616,7 @@ void Node::handleErrors(std::string errorCode, CustomMessage_Base *msg)
         return;
     }
 
-    if (modification && delay)
+    else if (modification && delay)
     {
         // handle this error
         // 1. modify message
@@ -589,7 +626,7 @@ void Node::handleErrors(std::string errorCode, CustomMessage_Base *msg)
         return;
     }
 
-    if (duplication && delay)
+    else if (duplication && delay)
     {
         // handle this error
         // 1. delay the message
@@ -600,7 +637,7 @@ void Node::handleErrors(std::string errorCode, CustomMessage_Base *msg)
         return;
     }
 
-    if (modification)
+    else if (modification)
     {
         // handle modification error
         // 1. modify message
@@ -610,7 +647,7 @@ void Node::handleErrors(std::string errorCode, CustomMessage_Base *msg)
         return;
     }
 
-    if (duplication)
+    else if (duplication)
     {
         // handle duplication error
         // 1. send original message
@@ -621,7 +658,7 @@ void Node::handleErrors(std::string errorCode, CustomMessage_Base *msg)
         return;
     }
 
-    if (delay)
+    else if (delay)
     {
         // handle delay error
         // send delayed message

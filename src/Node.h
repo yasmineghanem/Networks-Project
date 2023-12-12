@@ -27,6 +27,7 @@
 
 #include "Message.h"
 #include "customMessage_m.h"
+#include "Logger.h"
 
 using namespace omnetpp;
 
@@ -46,7 +47,7 @@ protected:
 
   // receiver
   std::vector<CustomMessage_Base *> receivedMessages;
-  int ackNumber = 0;
+  int n_ackNumber = 0;
   bool nackSent = false;
   int expectedFrameNack;
 
@@ -66,6 +67,7 @@ protected:
   std::vector<std::string>::iterator endError;
   std::vector<std::string>::iterator currentError;
 
+  // shared variables
   static int sender;
 
   // Delays in the system
@@ -80,6 +82,12 @@ protected:
   virtual void handleMessage(cMessage *msg);
 
 public:
+  Node(){};
+  virtual ~Node()
+  {
+    Logger::close();
+  };
+
   // main functions
   void processDataToSend();
   void processReceivedData(CustomMessage_Base *msg);

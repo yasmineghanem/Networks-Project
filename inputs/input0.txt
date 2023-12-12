@@ -1,4 +1,4 @@
 0000 this is the first message 
 0000 this is the second message
-0010 this is the third message and it's supposed to be duplicated
+0000 this is the third message
 0000 this is the fourth message
