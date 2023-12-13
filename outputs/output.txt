@@ -13,32 +13,32 @@ At time 51 node with ID = 0 started processing, introducing channel error with c
 At time 51.5 node with ID = 0 started sending time after processing, sent frame with SEQ_NUM = 2 and PAYLOAD = $this is the third message$ and TRAILER = 89
  MODIFIED 0 LOST 0 DUPLICATED 0 DELAY 0
 
-At time 51.5 node with ID = 1 received correct message and uploading PAYLOAD = this is the first message  with SEQ_NUM = 0to the network layer
+At time 51.5 node with ID = 1 received correct message and uploading PAYLOAD = this is the first message  with SEQ_NUM = 0 to the network layer
 
 At time 51.5 node with ID = 1 started processing ACK with NUMBER = 1
 
-At time 52 node with ID = 1 started sending time after processing sending ACK with number 1and LOSS = YES/NO 
+At time 52 node with ID = 1 started sending time after processing sending ACK with number 1 and LOSS = YES/NO 
 
-At time 52 node with ID = 1 received correct message and uploading PAYLOAD = this is the second message with SEQ_NUM = 1to the network layer
+At time 52 node with ID = 1 received correct message and uploading PAYLOAD = this is the second message with SEQ_NUM = 1 to the network layer
 
 At time 52 node with ID = 1 started processing ACK with NUMBER = 2
 
-At time 52.5 node with ID = 1 started sending time after processing sending ACK with number 2and LOSS = YES/NO 
+At time 52.5 node with ID = 1 started sending time after processing sending ACK with number 2 and LOSS = YES/NO 
 
-At time 52.5 node with ID = 1 received correct message and uploading PAYLOAD = this is the third message with SEQ_NUM = 2to the network layer
+At time 52.5 node with ID = 1 received correct message and uploading PAYLOAD = this is the third message with SEQ_NUM = 2 to the network layer
 
 At time 52.5 node with ID = 1 started processing ACK with NUMBER = 0
 
-At time 53 node with ID = 1 started sending time after processing sending ACK with number 0and LOSS = YES/NO 
+At time 53 node with ID = 1 started sending time after processing sending ACK with number 0 and LOSS = YES/NO 
 
 At time 53 node with ID = 0 started processing, introducing channel error with code = 0000
 
 At time 53.5 node with ID = 0 started sending time after processing, sent frame with SEQ_NUM = 0 and PAYLOAD = $this is the fourth message$ and TRAILER = 219
  MODIFIED 0 LOST 0 DUPLICATED 0 DELAY 0
 
-At time 54.5 node with ID = 1 received correct message and uploading PAYLOAD = this is the fourth message with SEQ_NUM = 0to the network layer
+At time 54.5 node with ID = 1 received correct message and uploading PAYLOAD = this is the fourth message with SEQ_NUM = 0 to the network layer
 
 At time 54.5 node with ID = 1 started processing ACK with NUMBER = 1
 
-At time 55 node with ID = 1 started sending time after processing sending ACK with number 1and LOSS = YES/NO 
+At time 55 node with ID = 1 started sending time after processing sending ACK with number 1 and LOSS = YES/NO 
 

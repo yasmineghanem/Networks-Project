@@ -101,14 +101,15 @@ public:
   void writeFile();
 
   // GoBackN protocol functions
-  void addHeader(std::string message);                                   // TODO: adds the header to the message to be sent
-  std::string frameMessage(std::string message);                         // TODO: takes a message and frames it using byte stuffing
-  std::bitset<8> calculateChecksum(std::string message);                 // TODO: calculates the message checksum as an error detection technique
-  bool detectError(std::string message, int checksum);                   // TODO: calculates the message checksum as an error detection technique
-  void getErrors(std::string errorCode, bool &, bool &, bool &, bool &); // TODO: given an error code handles the message accordingly
-  void handleErrors(std::string errorCode, CustomMessage_Base *);        // TODO: given an error code handles the message accordingly
-  std::string deframeMessage(std::string message);                       // TODO: defram the received message
+  void addHeader(std::string message);                                                                   // TODO: adds the header to the message to be sent
+  std::string frameMessage(std::string message);                                                         // TODO: takes a message and frames it using byte stuffing
+  std::bitset<8> calculateChecksum(std::string message);                                                 // TODO: calculates the message checksum as an error detection technique
+  bool detectError(std::string message, int checksum);                                                   // TODO: calculates the message checksum as an error detection technique
+  void getErrors(std::string errorCode, bool &modification, bool &loss, bool &duplication, bool &delay); // TODO: given an error code handles the message accordingly
+  void handleErrors(std::string errorCode, CustomMessage_Base *msg);                                        // TODO: given an error code handles the message accordingly
+  std::string deframeMessage(std::string message);                                                       // TODO: defram the received message
   void modifyMessage(CustomMessage_Base *msg);
+  bool checkDuplicate(CustomMessage_Base *msg);
   void handleTimeout();
 
   // utility functions

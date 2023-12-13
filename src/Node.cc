@@ -296,12 +296,15 @@ void Node::processReceivedData(CustomMessage_Base *msg)
     // 2. deframe the received message
     std::string originalMessage = deframeMessage(receivedMessage);
 
+    char *payload = new char[originalMessage.length() + 1];
+    std::strcpy(payload, originalMessage.c_str());
+    // set the message payload to the framed message
+    msg->setPayload(payload);
+
     EV << "MESSAGE RECEIVED: " << originalMessage << endl;
 
     std::string log = "At time " + simTime().str() + " node with ID = " + std::to_string(nodeID) + " received correct message and uploading PAYLOAD = " + originalMessage + " with SEQ_NUM = " + std::to_string(msg->getHeader()) + " to the network layer\n";
     Logger::write(log);
-
-    receivedMessages.push_back(msg);
 
     cancelAndDelete(msg);
 
@@ -712,6 +715,11 @@ void Node::modifyMessage(CustomMessage_Base *msg)
     msg->setPayload(modifiedCharacters);
 
     EV << "MODIFIED MESSAGE: " << modifiedMessage << endl;
+}
+
+bool Node::checkDuplicate(CustomMessage_Base *msg)
+{
+    return false;
 }
 
 // ---------------------------------- UTILITY FUNCTIONS ---------------------------------- //
