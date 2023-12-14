@@ -83,10 +83,7 @@ protected:
 
 public:
   Node(){};
-  virtual ~Node()
-  {
-    Logger::close();
-  };
+  virtual ~Node();
 
   // main functions
   void processDataToSend();
@@ -98,7 +95,6 @@ public:
 
   // dealing with files functions
   void readFile(std::string fileName);
-  void writeFile();
 
   // GoBackN protocol functions
   void addHeader(std::string message);                                                                   // TODO: adds the header to the message to be sent
