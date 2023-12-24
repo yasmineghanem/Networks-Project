@@ -51,16 +51,21 @@ void Logger::close()
         std::cout << "closing file" << std::endl;
 
         instance.fileStream.close();
+
+        if (!instance.fileStream.is_open())
+        {
+            std::cout << "File Closed" << std::endl;
+        }
     }
 
-    if (instance.fileStream.is_open())
-    {
-        std::cout << "File still open" << std::endl;
-    }
-    else
-    {
-        std::cout << "File closed" << std::endl;
-    }
+    // if (instance.fileStream.is_open())
+    // {
+    //     std::cout << "File still open" << std::endl;
+    // }
+    // else
+    // {
+    //     std::cout << "File closed" << std::endl;
+    // }
 }
 
 void Logger::write(const std::string &message)

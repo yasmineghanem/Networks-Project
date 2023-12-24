@@ -24,10 +24,13 @@
 #include <sstream>
 #include <ctime>
 #include <random>
+#include <chrono>
+#include <thread>
+#include <memory>
 
-#include "Message.h"
 #include "customMessage_m.h"
 #include "Logger.h"
+#include "Timer.h"
 
 using namespace omnetpp;
 
@@ -43,13 +46,14 @@ protected:
   // sender
   std::vector<std::string> messagesToSend;
   std::vector<std::string> errorCodes;
-  int WS;
+  std::vector<std::pair<CustomMessage_Base *, CustomMessage_Base *>> timers;
+  std::vector<bool> acks;
 
   // receiver
   std::vector<CustomMessage_Base *> receivedMessages;
   int n_ackNumber = 0;
-  bool nackSent = false;
   int expectedFrameNack;
+  bool nackSent = false;
 
   // system indices
   int startWindow;
@@ -67,10 +71,15 @@ protected:
   std::vector<std::string>::iterator endError;
   std::vector<std::string>::iterator currentError;
 
+  // timers
+  int startTimer;
+  int endTimer;
+
   // shared variables
   static int sender;
 
-  // Delays in the system
+  // system parameters
+  int WS;
   double PT; // message processing time
   double ED; // message error delay
   double TD; // message transmission delay
@@ -80,6 +89,7 @@ protected:
 
   virtual void initialize();
   virtual void handleMessage(cMessage *msg);
+  virtual void finish();
 
 public:
   Node(){};
@@ -102,16 +112,17 @@ public:
   std::bitset<8> calculateChecksum(std::string message);                                                 // TODO: calculates the message checksum as an error detection technique
   bool detectError(std::string message, int checksum);                                                   // TODO: calculates the message checksum as an error detection technique
   void getErrors(std::string errorCode, bool &modification, bool &loss, bool &duplication, bool &delay); // TODO: given an error code handles the message accordingly
-  void handleErrors(std::string errorCode, CustomMessage_Base *msg);                                        // TODO: given an error code handles the message accordingly
+  void handleErrors(std::string errorCode, CustomMessage_Base *msg);                                     // TODO: given an error code handles the message accordingly
   std::string deframeMessage(std::string message);                                                       // TODO: defram the received message
-  void modifyMessage(CustomMessage_Base *msg);
+  int modifyMessage(CustomMessage_Base *msg);
   bool checkDuplicate(CustomMessage_Base *msg);
-  void handleTimeout();
+  bool loseAck(double LP);
+  void handleTimeout(CustomMessage_Base *msg);
+  void resendTimeoutMessages(int seq_num);
 
   // utility functions
   std::vector<std::bitset<8>> convertToBinary(std::string String); // TODO: converts any given string to binary
   void sendMessage(std::string message, int time);                 // TODO: send the given message at the specified time
-  void printVector(std::vector<std::bitset<8>>);                   // TODO: print a given vector
   bool fullAdder(bool, bool, bool &);
   std::bitset<8> byteAdder(std::bitset<8>, std::bitset<8>);
 };
