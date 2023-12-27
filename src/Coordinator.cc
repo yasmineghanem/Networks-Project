@@ -27,22 +27,23 @@ void Coordinator::initialize()
     if (coordinatorFile.is_open())
     {
 
-        // Read the starting node
+        // read the value of the starting node
         nodeID = int(coordinatorFile.get()) - 48;
         EV << nodeID << endl;
 
-        // Read the starting time
+        // read the value of the starting time
         std::string line;
         std::getline(coordinatorFile, line);
 
-        // Convert starting time to float
+        // convert starting time to float
         float startingTime = std::stof(line);
         EV << startingTime << endl;
 
         CustomMessage_Base *coordinator = new CustomMessage_Base("Coordinator");
         coordinator->setFrameType(-1);
         coordinator->setHeader(nodeID);
-        // Schedule a self message to send a message to the starting node
+
+        // Schedule a self message to send a message to the starting node to start at the specified starting time
         scheduleAt(simTime() + startingTime, coordinator);
     }
 }
@@ -50,6 +51,7 @@ void Coordinator::initialize()
 void Coordinator::handleMessage(cMessage *msg)
 {
     // TODO - Generated method body
+
     // Send a message to the starting node to start sending
     send(msg, "outs", nodeID);
 }

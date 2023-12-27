@@ -250,7 +250,9 @@ void Node::handleMessage(cMessage *msg)
     }
 }
 
-// override the finish function to close the file and delete undisposed messages
+/**
+ * Override the finish function to add closing the file and removing the undisposed messages
+ **/
 void Node::finish()
 {
     // Custom finish code here
@@ -264,24 +266,17 @@ void Node::finish()
 
 /**
  * Process the next message to be sent from the messages queue
- * 
+ *
  * Steps:
  * 1. frame the message by applying byte stuffing algorithm and set it to the payload
  * 2. calculate the checksum of the framed message and add it as the parity byte to the trailer
  * 3. writes the starting processing time to the output log file
  *
- *@param msg the received frame from the sender casted to our CustomMessage
  **/
 void Node::processDataToSend()
 {
-
     // TODO: implement the sending protocol
-    // 4. calculate the sequence number and add it as the header
-    // 5. 
-    // 7. 
-    // don't forget to update the current sequence number and check the window size
 
-    // print message to send
     EV << "MESSAGE TO SEND: " << messagesToSend[currentIndex] << endl;
 
     // declarations needed throughout the function
@@ -290,29 +285,30 @@ void Node::processDataToSend()
     std::string framedMessage; // message after applying the byte stuffung
     int parity;                // parity byte after being converted to int
 
-    // declare a new message
+    // creates a new message object
     CustomMessage_Base *currentMessage = new CustomMessage_Base("CurrentMessage");
 
-    // 2. apply framing using byte stuffing
+    // call the frame message functions and pass the intended message
     framedMessage = this->frameMessage(messagesToSend[currentIndex]);
     char *framedCharacters = new char[framedMessage.length() + 1];
     std::strcpy(framedCharacters, framedMessage.c_str());
+    currentMessage->setPayload(framedCharacters); // set the message payload to the framed message
 
-    // set the message payload to the framed message
-    currentMessage->setPayload(framedCharacters);
-
-    // 3. calculate the sequence number and add it to the header
+    // calculate the sequence number of the current frame and set it to the message header
     sequenceNumber = currentIndex % (WS + 1);
     currentMessage->setHeader(sequenceNumber);
 
-    // 4. calculate the checksum and add it to message trailer
+    // call the checksum calculations function  and set it to the message trailer
     parityByte = this->calculateChecksum(framedMessage);
-    parity = (int)(parityByte.to_ulong());
+    parity = (int)(parityByte.to_ulong()); // converts the parity byte to int for easier tracing (should change it)
     currentMessage->setTrailer(parity);
-    currentMessage->setFrameType(2);
 
-    // simulate the message being processed
+    // set the frametype to the specified data frametype
+    currentMessage->setFrameType(2); // set the message trailer to the calculated checksum parity byte
+
+    // rename the message to indicate that the message is being processed
     currentMessage->setName("End Processing");
+
     // if (resending)
     // {
     //     scheduleAt(simTime() + PT + 0.001, currentMessage);
@@ -320,15 +316,17 @@ void Node::processDataToSend()
     // }
     // else
     scheduleAt(simTime() + PT, currentMessage);
+
     EV << " MESSAGE WITH SEQUENCE NUMBER " << sequenceNumber << " START PROCESSING AT " << simTime() << endl;
 
-    // output to log file
+    // write the start processing time and messgae details to the output log file
     std::string log = "At time [" + simTime().str() + "] NODE[" + std::to_string(nodeID) + "] started processing, introducing channel error with CODE[" + errorCodes[currentIndex] + "]\n";
     Logger::write(log);
 }
 
 /**
  * Process the received message from the sender
+ *
  * Steps:
  * 1. check if the received frame has the expected sequence number => if it's not then send ACK on the expected frame
  * 2. get the parity and calculate the checksum to detect if there is an error
@@ -413,37 +411,69 @@ void Node::processReceivedData(CustomMessage_Base *msg)
     // cancelAndDelete(msg);
 }
 
+/**
+ * Process the ACK and schedule to send it
+ *
+ * Steps:
+ * 1. create a new cMessage
+ * 2. set it's frametype and the ACK number accordingly
+ * 3. schedule the ACK to be sent after processing
+ *
+ **/
 void Node::sendAck()
 {
     // TODO: send the ack of the received protocol
-    CustomMessage_Base *ack = new CustomMessage_Base("End Processing"); // create a new message for the acknowledment and set its name to simulate the message's processing time
-    ack->setFrameType(1);                                               // sets the framtype to the ack's frametype
-    ack->setAckNack(n_ackNumber);                                       // sets the messages's ack number to the next expected frame
-    EV << "ACK " << n_ackNumber << " START PROCESSING" << endl;
 
-    // output to log file
-    // std::string log = "At time [" + simTime().str() + "] NODE[" + std::to_string(nodeID) + "] started processing ACK with NUMBER = " + std::to_string(n_ackNumber) + "\n";
-    // Logger::write(log);
+    // create a new message for the acknowledgement and set its name to simulate the message's processing time
+    CustomMessage_Base *ack = new CustomMessage_Base("End Processing");
+
+    // set the ACK information
+    ack->setFrameType(1);         // sets the framtype to the ack's frametype
+    ack->setAckNack(n_ackNumber); // sets the messages's ack number to the next expected frame
+
+    EV << "ACK " << n_ackNumber << " START PROCESSING" << endl;
 
     scheduleAt(simTime() + PT, ack);
 }
 
+/**
+ * Process the NACK and schedule to send it
+ *
+ * Steps:
+ * 1. create a new cMessage
+ * 2. set it's frametype and the ACK number accordingly
+ * 3. set the parameter nackSent to indicate that a NACK has been sent => avoids sending multiple NACKs for the same message
+ * 4. schedule the NACK to be sent after processing
+ *
+ **/
 void Node::sendNack()
 {
     // TODO: send the ack of the received protocol
-    CustomMessage_Base *nack = new CustomMessage_Base("End Processing"); // create a new message for the nack and set its name to simulate the message's processing time
-    nack->setFrameType(0);                                               // sets the framtype to the nack's frametype
-    nack->setAckNack(n_ackNumber);                                       // sets the messages's ack number to the frame that should be resent
+
+    // create a new message for the nack and set its name to simulate the message's processing time
+    CustomMessage_Base *nack = new CustomMessage_Base("End Processing");
+
+    // set the NACK message information
+    nack->setFrameType(0);         // sets the framtype to the nack's frametype
+    nack->setAckNack(n_ackNumber); // sets the messages's ack number to the frame that should be resent
+
     EV << "NACK " << n_ackNumber << " START PROCESSING" << endl;
+    nackSent = true; // indicates that a NACK was sent by the receiver but still hasn't received the correct message
 
-    // output to log file
-    // std::string log = "At time [" + simTime().str() + "] NODE[" + std::to_string(nodeID) + "] started processing NACK with NUMBER = " + std::to_string(n_ackNumber) + "\n";
-    // Logger::write(log);
-
-    scheduleAt(simTime() + PT, nack);
-    nackSent = true;
+    scheduleAt(simTime() + PT, nack); // schedule to send message after ending processing
 }
 
+/**
+ * Process the ACK and schedule to send it
+ *
+ * Steps:
+ * 1. create a new cMessage
+ * 2. set it's frametype and the ACK number accordingly
+ * 3. set the parameter nackSent to indicate that a NACK has been sent => avoids sending multiple NACKs for the same message
+ * 4. schedule the NACK to be sent after processing
+ *
+ * @param msg the received frame from the sender casted to our CustomMessage
+ **/
 bool Node::receiveAck(CustomMessage_Base *msg)
 {
 
@@ -519,6 +549,17 @@ bool Node::receiveAck(CustomMessage_Base *msg)
     return true;
 }
 
+/**
+ * Process the ACK and schedule to send it
+ *
+ * Steps:
+ * 1. create a new cMessage
+ * 2. set it's frametype and the ACK number accordingly
+ * 3. set the parameter nackSent to indicate that a NACK has been sent => avoids sending multiple NACKs for the same message
+ * 4. schedule the NACK to be sent after processing
+ *
+ * @param msg the received frame from the sender casted to our CustomMessage
+ **/
 void Node::receiveNack(CustomMessage_Base *msg)
 {
     // TODO: receive the nack from the receiver
@@ -582,20 +623,27 @@ void Node::receiveNack(CustomMessage_Base *msg)
 }
 
 // ---------------------------------- FILE FUNCTIONS ---------------------------------- //
-// read the messages from the given file
+
+/**
+ * Reads the error codes and messages from the input file specified
+ *
+ * @param fileName the file name from which we should read from
+ **/
 void Node::readFile(std::string fileName)
 {
-    // TODO: separate the error code from the message
+    // TODO: read the input file
 
+    // declare and open the file
     std::ifstream inputFile;
     inputFile.open("../inputs/" + fileName);
 
+    // declarations of temporary variables to read the different parts of the line
     std::string message;
     std::string errorCode;
 
-    if (inputFile.is_open())
+    if (inputFile.is_open()) // check if the file is opened
     {
-        while (!inputFile.eof())
+        while (!inputFile.eof()) // read all the lines till the end of the file
         {
             // read the first four characters as the error bits
             errorCode = "";
@@ -615,18 +663,24 @@ void Node::readFile(std::string fileName)
         }
     }
 
-    inputFile.close();
+    inputFile.close(); // close the file
 }
 
 // ---------------------------------- PROTOCOL FUNCTIONS ---------------------------------- //
-// TODO: given a string (message) return the framed message to be sent
-// using the byte stuffing framing method
+/**
+ * Given a string of the apply the byte stuffing algorithm to frame the message
+ *
+ * @param message the message string to be framed
+ * @return the framed message after applying byte stuffing
+ **/
 std::string Node::frameMessage(std::string message)
 {
+    // TODO: given a string (message) return the framed message to be sent
+
     // add the flag byte at the beginning
     std::string framedMessage = "$";
 
-    // apply byte dtuffing to the whole message
+    // apply byte stuffing to the whole message
     for (int i = 0; i < message.length(); i++)
     {
         if (message[i] == '/' || message[i] == '$')
@@ -636,14 +690,24 @@ std::string Node::frameMessage(std::string message)
 
     // add the flag byte at the end
     framedMessage += '$';
+
+    // return the message after framing
     return framedMessage;
 }
 
-// TODO: given a framed message return the original message
+/**
+ * Given a string of the framed message reverse the byte stuffing algorithm to obtain the original message
+ *
+ * @param message the framed payload after receinving the message on the receiver's side
+ * @return the original message after deframing it
+ **/
 std::string Node::deframeMessage(std::string message)
 {
-    std::string originalMessage = "";
+    // TODO: given a framed message return the original message
 
+    std::string originalMessage = ""; // stores the original message after deframing
+
+    // loop an all the characters and removes added flags and slashes
     for (int i = 1; i < message.length() - 1; i++)
     {
         if (message[i] == '/')
@@ -655,55 +719,86 @@ std::string Node::deframeMessage(std::string message)
             originalMessage += message[i];
     }
 
+    // return the original message
     return originalMessage;
 }
 
-// TODO: given a string (message) calculate its checksum
-// this will be used as the parity byte to be added to the message trailer
+/**
+ * Given a string of the framed message apply the checksum algorithm to obtain the pairty byte
+ *
+ * Steps:
+ * 1. convert the message into its binary representation
+ * 2. add all bytes of binary message
+ * 3. get the one's complement of the final sum
+ *
+ * @param message the message after applying the framing
+ * @return a 8-bit bitset that represents the parity byte in bits of the message
+ **/
 std::bitset<8> Node::calculateChecksum(std::string message)
 {
-    // declarations
-    std::vector<std::bitset<8>> sums;
-    std::bitset<8> zero(0);
-    sums.push_back(zero);
+    std::vector<std::bitset<8>> sums; // stores the sums of each byte with the next one
+    std::bitset<8> zero(0);           // used as an initialization and comparator
 
-    // first convert the message into binary vector
+    sums.push_back(zero); // add the zero to the start of the vector to add it to the first byte
+
+    // converts the string into its binary representaion and divides it into a vector of characters
+    // each character is represented in 8 bits
     std::vector<std::bitset<8>> binaryMessage = this->convertToBinary(message);
-    int counter = 0;
+
+    int counter = 0; // initialize counter to access bytes in the sums vector
+
+    // loop on all bytes in the returned binary message
     for (std::bitset<8> byte : binaryMessage)
     {
-        sums.push_back(this->byteAdder(sums[counter], byte));
-        counter++;
+        sums.push_back(this->byteAdder(sums[counter], byte)); // adds the current byte to the previuos one
+        counter++;                                            // increment counter
     }
 
-    // get the one's complement
-    std::bitset<8> checksum(sums[sums.size() - 1]);
-    checksum = checksum.flip();
+    std::bitset<8> checksum(sums[sums.size() - 1]); // get the last element in the vector => final sum of the message
+    checksum = checksum.flip();                     // get the one's complement of the sum
+
+    // return the final checksum
     return checksum;
 }
 
-// TODO: calcuate the checksum at the receiver to detect if there's an error
-// returns True if an error is detected and False if not
-// this will be used as the parity byte to be added to the message trailer
+/**
+ * Given a string of the framed message apply the checksum algorithm to obtain the pairty byte
+ *
+ * Steps:
+ * 1. convert the message into its binary representation
+ * 2. add all bytes of binary message
+ * 3. get the one's complement of the final sum
+ * 4. convert the received checksum to it binary representaion
+ * 5. add the received checksum to the calculated checksum
+ * 6. compare the final sum to 0
+ *
+ * @param message the message after applying the framing
+ * @param checksum the checksum sent with the message (calculated at the sender's side)
+ * @return true if the final checksum is equal to 0 false is not
+ **/
 bool Node::detectError(std::string message, int checksum)
 {
-    // declarations
-    std::vector<std::bitset<8>> sums;
-    std::bitset<8> zero(0);
-    sums.push_back(zero);
+    // TODO: calcuate the checksum at the receiver to detect if there's an error
 
-    // convert sent received checksum to binary
+    std::vector<std::bitset<8>> sums; // stores the sums of each byte with the next one
+    std::bitset<8> zero(0);           // used as an initialization and comparator
+
+    sums.push_back(zero); // add the zero to the start of the vector to add it to the first byte
+
+    // convert sent received checksum to its binary representaion
     std::bitset<8> receivedChecksum(checksum);
 
-    // first convert the message into binary vector
+    // converts the string into its binary representaion and divides it into a vector of characters
+    // each character is represented in 8 bits
     std::vector<std::bitset<8>> binaryMessage = this->convertToBinary(message);
-    binaryMessage.push_back(receivedChecksum);
 
-    int counter = 0;
+    int counter = 0; // initialize counter to access bytes in the sums vector
+
+    // loop on all bytes in the returned binary message
     for (std::bitset<8> byte : binaryMessage)
     {
-        sums.push_back(this->byteAdder(sums[counter], byte));
-        counter++;
+        sums.push_back(this->byteAdder(sums[counter], byte)); // adds the current byte to the previuos one
+        counter++;                                            // increment counter
     }
 
     if (sums[sums.size() - 1].flip() == zero)
@@ -713,73 +808,92 @@ bool Node::detectError(std::string message, int checksum)
     return true;
 }
 
+/**
+ * Given the error codes read from the file sets the types of errors that the message should encounter
+ *
+ * @param modification passed by reference => 1 indicates that the frame should be modified
+ * @param loss passed by reference => 1 indicates that the frame should be lost
+ * @param duplication passed by reference => 1 indicates that the frame should be duplicated
+ * @param delay passed by reference => 1 indicates that the frame should be delayed
+ **/
 void Node::getErrors(std::string errorCode, bool &modification, bool &loss, bool &duplication, bool &delay)
 {
-    // 4 bits
-    // 0 -> Modification
-    // 1 -> Loss
-    // 2 -> Duplication
-    // 3 -> Delay
+    /**
+     * BITS POSITIONS
+     * 0 -> Modification
+     * 1 -> Loss
+     * 2 -> Duplication
+     * 3 -> Delay
+     **/
 
-    // Strategy:
-    // Loss overrules all
-
-    // Duplication -> send again
-    // Modification -> modify before sending
-    // Delay -> send after longer time (check for timeout)
-    if (errorCode[0] == '1')
-    {
+    if (errorCode[0] == '1') // modification bit
         modification = true;
-    }
 
-    if (errorCode[1] == '1')
-    {
+    if (errorCode[1] == '1') // loss bit
         loss = true;
-    }
 
-    if (errorCode[2] == '1')
-    {
+    if (errorCode[2] == '1') // duplication bit
         duplication = true;
-    }
 
-    if (errorCode[3] == '1')
-    {
+    if (errorCode[3] == '1') // delay bit
         delay = true;
-    }
 }
 
+/**
+ * schedules the frame to be sent with the specified delays according to the given errors
+ *
+ * @param errorCode the error code associated with the frame that should be sent
+ * @param msg the frame that should be sent
+ **/
 void Node::handleErrors(std::string errorCode, CustomMessage_Base *msg)
 {
+    // error bits
     bool modification = false;
     bool loss = false;
     bool duplication = false;
     bool delay = false;
     int modifiedBit;
+
+    // get the trailer to write to the output log file
     std::bitset<8> trialer(msg->getTrailer());
 
+    // set the error bits according to the error code read from the file
     getErrors(errorCode, modification, loss, duplication, delay);
 
     EV << "ERROR CODE: " << errorCodes[currentIndex] << " MODIFICATION: " << modification << " LOSS: " << loss << " DUPLICATION: " << duplication << " DELAY: " << delay << endl;
 
-    // output to log file
+    // write to the output log file
+    // this is the start of the string to be written
+    // we should add the rest of the output message according to the types of errors associated with this frame in the if statements
     std::string log = "At time [" + simTime().str() + "] NODE[" + std::to_string(nodeID) + "] [SENT] frame with SEQ_NUM[" + std::to_string(msg->getHeader()) + "] and PAYLOAD[" + msg->getPayload() + "] and TRAILER[" + trialer.to_string() + "] ";
-    // log = log + " MODIFIED " + std::to_string(modification) + " LOST " + std::to_string(loss) + " DUPLICATED " + std::to_string(duplication) + " DELAY " + std::to_string(delay) + "\n";
 
-    if (loss)
+    if (loss) // if the frame is supposed to be lost
     {
-        // don't send anything
+        // check for other errors to write the errors to the output file
+        if (modification)
+            modifiedBit = modifyMessage(msg);
+        else
+            modifiedBit = -1;
 
-        log += "MODIFIED [-1], LOST [Yes], DUPLICATE [0], DELAY [0] \n";
+        int delayError = 0;
+        if (delay)
+            delayError = ED;
+
+        // write to the output file
+        log += "MODIFIED [" + std::to_string(modifiedBit) + "], LOST [Yes], DUPLICATE [0], DELAY [" + std::to_string(ED) + "] \n"; //
         Logger::write(log);
 
+        // return without scheduling anything
         return;
     }
 
     if (modification && duplication && delay)
     {
-        // handle this error
+        // TODO: handle this error case
+
         // 1. modify message
         modifiedBit = modifyMessage(msg);
+
         // 2. send modified delayed message
         scheduleAt(simTime() + TD + ED, msg);
         Logger::write(log + "MODIFIED [" + std::to_string(modifiedBit) + "], LOST [No], DUPLICATE [1], DELAY [" + std::to_string(ED) + "] \n");
@@ -788,7 +902,7 @@ void Node::handleErrors(std::string errorCode, CustomMessage_Base *msg)
         CustomMessage_Base *dupliactedMessage = msg->dup();
         scheduleAt(simTime() + TD + ED + DD, dupliactedMessage);
 
-        // log += "MODIFIED [" + std::to_string(modifiedBit) + "], LOST [No], DUPLICATE [1/2], DELAY [" + std::to_string(ED) + "] \n";
+        // write to the output log file
         Logger::write(log + "MODIFIED [" + std::to_string(modifiedBit) + "], LOST [No], DUPLICATE [2], DELAY [" + std::to_string(ED) + "] \n");
 
         return;
@@ -796,9 +910,11 @@ void Node::handleErrors(std::string errorCode, CustomMessage_Base *msg)
 
     if (modification && duplication)
     {
-        // handle this error
+        // TODO: handle this error case
+
         // 1. modify message
         modifiedBit = modifyMessage(msg);
+
         // 2. send modified message
         scheduleAt(simTime() + TD, msg);
         Logger::write(log + "MODIFIED [" + std::to_string(modifiedBit) + "], LOST [No], DUPLICATE [1], DELAY [0] \n");
@@ -807,19 +923,23 @@ void Node::handleErrors(std::string errorCode, CustomMessage_Base *msg)
         CustomMessage_Base *dupliactedMessage = msg->dup();
         scheduleAt(simTime() + TD + DD, dupliactedMessage);
 
-        // log += "Modified [" + std::to_string(modifiedBit) + "], Lost [No], Duplicate [1/2], Delay [0] \n";
+        // write to the output log file
         Logger::write(log + "MODIFIED [" + std::to_string(modifiedBit) + "], LOST [No], DUPLICATE [2], DELAY [0] \n");
+
         return;
     }
 
     if (modification && delay)
     {
-        // handle this error
+        // TODO: handle this error case
+
         // 1. modify message
         modifiedBit = modifyMessage(msg);
+
         // 2. send delayed modified message
         scheduleAt(simTime() + TD + ED, msg);
 
+        // write to the output log file
         log += "MODIFIED [" + std::to_string(modifiedBit) + "], LOST [No], DUPLICATE [0], DELAY[" + std::to_string(ED) + "] \n";
         Logger::write(log);
 
@@ -828,7 +948,8 @@ void Node::handleErrors(std::string errorCode, CustomMessage_Base *msg)
 
     if (duplication && delay)
     {
-        // handle this error
+        // TODO: handle this error case
+
         // 1. delay the message
         scheduleAt(simTime() + TD + ED, msg);
         Logger::write(log + "MODIFIED [-1], LOST [No], DUPLICATE [2], DELAY [" + std::to_string(ED) + "]\n");
@@ -837,7 +958,7 @@ void Node::handleErrors(std::string errorCode, CustomMessage_Base *msg)
         CustomMessage_Base *dupliactedMessage = msg->dup();
         scheduleAt(simTime() + TD + ED + DD, dupliactedMessage);
 
-        // log += "MODIFIED [-1], LOST [No], DUPLICATE [1/2], DELAY " + std::to_string(ED) + "\n";
+        // write to the output log file
         Logger::write(log + "MODIFIED [-1], LOST [No], DUPLICATE [2], DELAY [" + std::to_string(ED) + "]\n");
 
         return;
@@ -845,57 +966,76 @@ void Node::handleErrors(std::string errorCode, CustomMessage_Base *msg)
 
     if (modification)
     {
+        // TODO: handle this error case
 
-        // handle modification error
         // 1. modify message
         modifiedBit = modifyMessage(msg);
+
         // 2. send modified message
         scheduleAt(simTime() + TD, msg);
 
+        // write to the output log file
         log += "MODIFIED [" + std::to_string(modifiedBit) + "], LOST [No], DUPLICATE [0], DELAY [0] \n";
         Logger::write(log);
+
         return;
     }
 
     if (duplication)
     {
+        // TODO: handle this error case
 
-        // handle duplication error
         // 1. send original message
         scheduleAt(simTime() + TD, msg);
+
+        // write the first version of the message to the output log file
         Logger::write(log + "MODIFIED [-1], LOST [No], DUPLICATE [1], DELAY [0] \n");
 
         // 2. send duplicated message
         CustomMessage_Base *dupliactedMessage = msg->dup();
         scheduleAt(simTime() + TD + DD, dupliactedMessage);
+
+        // write the first version of the message to the output log file
         Logger::write(log + "MODIFIED [-1], LOST [No], DUPLICATE [2], DELAY [0] \n");
+
         return;
     }
 
     if (delay)
     {
-        // EV << "DELAYED MESSAGE ONLY SCHEDULED TO SEND AFTER " << TD + ED << endl;
-        // handle delay error
-        // send delayed message
+        // TODO: handle this error case
+
+        // send the delayed message
         scheduleAt(simTime() + TD + ED, msg);
+
+        // write the to the output log file
         log += "MODIFIED [-1], LOST [No], DUPLICATE [0], DELAY [" + std::to_string(ED) + "] \n";
         Logger::write(log);
+
         return;
     }
 
+    // send the message without any errors after the TD specified if the error code = 0000
     scheduleAt(simTime() + TD, msg);
+
+    // write to the output file
     log += "Modified [-1], Lost [No], Duplicate [0], Delay [0] \n";
     Logger::write(log);
 }
 
-int Node::modifyMessage(CustomMessage_Base *msg)
+/**
+ * modifies a single bit in the message to simulate the frame sent being corrupted
+ *
+ * @param msg the frame that should be sent
+ **/
+int Node::modifyMessage(CustomMessage_Base *msg) // get the payload of the frame
 {
-
     std::string payload = msg->getPayload();
+
     EV << "TEST MODIFY MESSAGE" << endl;
     EV << "Payload: " << payload << endl;
 
-    // first convert the message into binary vector
+    // convert the message into binary vector
     std::vector<std::bitset<8>> binaryBitset = this->convertToBinary(payload);
     std::string binaryMessage = "";
 
@@ -905,19 +1045,16 @@ int Node::modifyMessage(CustomMessage_Base *msg)
         binaryMessage += binaryBitset[i].to_string();
     }
 
-    // get a random bit in the message to modify
+    // get a random bit in the binary message to modify
     int errorBit = int(uniform(0, binaryMessage.length()));
+
+    // toggle the error bit
     if (binaryMessage[errorBit] == '0')
-    {
         binaryMessage[errorBit] = '1';
-    }
     else
-    {
         binaryMessage[errorBit] = '0';
-    }
 
     // convert the message to its original form again
-
     std::string modifiedMessage = "";
     std::istringstream in(binaryMessage);
     std::bitset<8> bs;
@@ -926,87 +1063,131 @@ int Node::modifyMessage(CustomMessage_Base *msg)
         modifiedMessage += char(bs.to_ulong());
     }
 
+    // set the payload with the new modified message
     char *modifiedCharacters = new char[modifiedMessage.length() + 1];
     std::strcpy(modifiedCharacters, modifiedMessage.c_str());
     msg->setPayload(modifiedCharacters);
 
     EV << "MODIFIED MESSAGE: " << modifiedMessage << " ERROR BIT: " << errorBit << endl;
+
+    // return the modified error bit
     return errorBit;
 }
 
+/**
+ * Checks if the received message is duplicated
+ *
+ * @param msg the frame that should be sent
+ **/
 bool Node::checkDuplicate(CustomMessage_Base *msg)
 {
     // get the original payload of the message first
     std::string deframedMessage = deframeMessage(msg->getPayload());
     char *tempPayload = new char[deframedMessage.length() + 1];
     std::strcpy(tempPayload, deframedMessage.c_str());
-    // msg->setPayload(tempPayload);
 
     EV << "CHECKING DUPLICATES" << endl;
 
+    // loops on all the received messages and compares it to the current message
     for (int i = 0; i < receivedMessages.size(); i++)
     {
         EV << receivedMessages[i]->getHeader() << " " << receivedMessages[i]->getPayload() << " " << receivedMessages[i]->getTrailer() << endl;
+
+        // skip if the headers are not the same
         if (receivedMessages[i]->getHeader() != msg->getHeader())
             continue;
+
+        // return true if the message is received before
         if (std::strcmp(tempPayload, receivedMessages[i]->getPayload()) == 0 && msg->getTrailer() == receivedMessages[i]->getTrailer())
         {
             EV << "DUPLICATED MESSAGE" << endl;
             return true;
         }
     }
+
+    // the message is not received before
     return false;
 }
 
+/**
+ * Simulates the ACKS/NACKS being lost in the program according to the loss probability
+ *
+ * @param LP the loss probability specified in the initial of the program
+ **/
 bool Node::loseAck(double LP)
 {
-    srand(time(0));
+    srand(time(0)); // changes the seed according to the time of the program
 
-    double randomProbability;
+    double randomProbability; // random probability that will indicate if the ACK/NACK is being lost or not
+
+    // changes the random probabilty for each ACK/NACK being sent
     for (int i = 0; i < 2; i++)
     {
         randomProbability = ((double)rand()) / RAND_MAX;
     }
+
     EV << "PROBABILITY: " << randomProbability << endl;
+
+    // if the random probaility generated is less than or equal the LP given then the ACK/NACK should be lost
     if (randomProbability <= LP)
     {
         return true;
     }
+
+    // the ACK/NACK should not be lost
     return false;
 }
 
+/**
+ * Starts the timer for the next frame to be sent
+ *
+ * @param msg the frame that should be sent
+ **/
 void Node::handleTimeout(CustomMessage_Base *msg)
 {
+    // get the sequence number of the frame
     int sequenceNumber = msg->getHeader();
 
-    if (timers[sequenceNumber].first == true)
+    // if there is already a timer in the
+    if (timers[sequenceNumber].first)
         return;
 
     // should start timer of the message sent
     EV << "STARTED TIMER FOR MESSAGE, TO = " << TO << " " << sequenceNumber << " " << msg->getPayload() << endl;
-    timers[sequenceNumber].first = true;
-    timers[sequenceNumber].second->setHeader(sequenceNumber);
+
+    // starts the timer at the index of the sequence number
+    timers[sequenceNumber].first = true;                      // there is a timer scheduled
+    timers[sequenceNumber].second->setHeader(sequenceNumber); // set the header of the timer to indicate the sequence number associated with the current timer
+
     scheduleAt(simTime() + TO, timers[sequenceNumber].second);
 }
 
+/**
+ * Updates current index to resend the messages in the window
+ *
+ * @param sequenceNumber the sequence number of the frame for which the timer timed out
+ **/
 void Node::resendTimeoutMessages(int sequenceNumber)
 {
 
     EV << "TIMEOUT  " << endl;
 
+    // move the current index to the message that timed out in the window
     currentIndex = startWindow;
     current = start;
+
     while ((currentIndex % (WS + 1)) != sequenceNumber)
     {
         current++;
         currentIndex++;
     }
 
-    // adjust the error code of the timeout frame -> avoid infinate loop
+    // resend the timeout messages without any errors
     errorCodes[currentIndex] = "0000";
 
     EV << "START TIMER " << startTimer << " END TIMER " << endTimer << endl;
 
+    // cancel the timers for all the subsequent messages in the window
     int index = startTimer;
 
     EV << "CANCELING TIMEOUT MESSAGES" << endl;
@@ -1014,49 +1195,59 @@ void Node::resendTimeoutMessages(int sequenceNumber)
     while (index != endTimer)
     {
 
-        if (timers[index].first)
+        if (timers[index].first) // if a timer has started for the message with the same sequence number
         {
-
             EV << "CANCELLING MESSAGE WITH SEQ_NUM " << index << " AND PAYLOAD " << timers[index].first << endl;
 
-            cancelEvent(timers[index].second);
-            timers[index].first = false;
+            cancelEvent(timers[index].second); // cancel the timer
+            timers[index].first = false;       // set that the timer is off
         }
-        index = ((index + 1) % (WS + 1));
+        index = ((index + 1) % (WS + 1)); // update the index to move to the next place in the window => ensure that the index wrops around when reaching the end of the window
     }
 
+    // handles the last element as the loop exits when it reaches the end timer index without cancelling it
     index = index % (WS + 1);
 
     if (timers[index].first)
     {
-
         EV << "CANCELLING MESSAGE WITH SEQ_NUM " << index << " AND PAYLOAD " << timers[index].first << endl;
 
         cancelEvent(timers[index].second);
-
-        // cancelAndDelete(timers[index].first);
-        // delete timers[index].first;
         timers[index].first = false;
     }
 }
 
 // ---------------------------------- UTILITY FUNCTIONS ---------------------------------- //
-// TODO: given a string (message) return a vector of its binary representation
+/**
+ * Given a string of characters convert it to its binary representation
+ *
+ * @param String string of characters that should be converted to binary
+ * @return the binary representation of String divided into vector of bytes => each character is represented in one byte
+ **/
 std::vector<std::bitset<8>> Node::convertToBinary(std::string String)
 {
-    std::vector<std::bitset<8>> binaryMessage;
+    // TODO: given a string (message) return a vector of its binary representation
 
+    std::vector<std::bitset<8>> binaryMessage; // stores the final binary message
+
+    // loop on each character in the string and convert it to 8-bit binary bitset
     for (int i = 0; i < String.length(); i++)
     {
         char character = String[i];
         std::bitset<8> asciiBitset(character);
         binaryMessage.push_back(asciiBitset);
-        //        EV << asciiBitset << endl;
     }
 
+    // return the converted message
     return binaryMessage;
 }
 
+/**
+ * Given a string of characters convert it to its binary representation
+ *
+ * @param String string of characters that should be converted to binary
+ * @return the binary representation of String divided into vector of bytes => each character is represented in one byte
+ **/
 bool Node::fullAdder(bool firstBit, bool secondBit, bool &carry)
 {
     //    EV << "previous carry: " << carry;
@@ -1066,18 +1257,24 @@ bool Node::fullAdder(bool firstBit, bool secondBit, bool &carry)
     return sum;
 }
 
+/**
+ * Adds the two bytes given => bit wise
+ *
+ * @param firstByte, secondByte string of characters that should be converted to binary
+ * @return the sum of the firstByte and secondByte as a bitset
+ **/
 std::bitset<8> Node::byteAdder(std::bitset<8> firstByte, std::bitset<8> secondByte)
 {
-    std::bitset<8> byteSum(0);
-    bool carry = false;
+    std::bitset<8> byteSum(0); // initialize the sum
+    bool carry = false;        // the carry from the full adder
+
+    // loops to add the bits using full adder
     for (int i = 0; i < 8; i++)
     {
-        //        EV << i << " ";
         byteSum[i] = this->fullAdder(firstByte[i], secondByte[i], carry);
-        //        EV << "byteSum carry: " << carry << endl;
     }
-    // handle overflow
-    // if final carry is 1 then increment the current byte
+
+    // handle overflow if the final carry is 1
     if (carry == true)
     {
         for (int i = 0; i < 8; i++)
@@ -1094,18 +1291,16 @@ std::bitset<8> Node::byteAdder(std::bitset<8> firstByte, std::bitset<8> secondBy
         }
     }
 
-    //    EV << "Byte Sum: " << byteSum << endl;
-
+    // return the final sum
     return byteSum;
 }
 
-// DESTRUCTOR
+/**
+ * DESTRUCTOR
+ **/
 Node::~Node()
 {
-    // print messages before closing msh mafrood hena bas wtv
-
-    // Logger::close();
-
+    // delete all allocated messages
     for (auto message : receivedMessages)
     {
         delete message;
@@ -1116,7 +1311,6 @@ Node::~Node()
     for (const auto &timer : timers)
     {
         delete timer.second;
-        // timer.second = nullptr;
     }
     timers.clear();
 }

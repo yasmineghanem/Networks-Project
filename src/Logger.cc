@@ -27,13 +27,23 @@ Logger::~Logger()
     // TODO Auto-generated destructor stub
 }
 
+/**
+ * Opens the file to write into
+ *
+ * @param logFile the file name that should be written into
+ **/
 void Logger::open(const std::string &logFile)
 {
+    // checks if the file is already open to not open it again (this is done because two nodes will be accessing the same file)
     if (instance.fileStream.is_open())
     {
         return;
     }
+
+    // open the file and erase what is already there
     instance.fileStream.open(logFile.c_str(), std::ios::out | std::ios::trunc);
+
+    // ensure that the file is opened succussfully
     if (instance.fileStream.is_open())
     {
         std::cout << "File opened successfully" << std::endl;
@@ -44,30 +54,33 @@ void Logger::open(const std::string &logFile)
     }
 }
 
+/**
+ * Closes the file opened
+ *
+ * @param logFile the file name that should be written into
+ **/
 void Logger::close()
 {
+    // checks if the file is open to close it (done to handle the two nodes accessing the same file)
     if (instance.fileStream.is_open())
     {
         std::cout << "closing file" << std::endl;
 
-        instance.fileStream.close();
+        instance.fileStream.close(); // close the file
 
+        // ensure that the file is closed
         if (!instance.fileStream.is_open())
         {
             std::cout << "File Closed" << std::endl;
         }
     }
-
-    // if (instance.fileStream.is_open())
-    // {
-    //     std::cout << "File still open" << std::endl;
-    // }
-    // else
-    // {
-    //     std::cout << "File closed" << std::endl;
-    // }
 }
 
+/**
+ * Writes the given message to the output file
+ *
+ * @param message the message to be written to the file
+ **/
 void Logger::write(const std::string &message)
 {
     std::ostream &stream = instance.fileStream;

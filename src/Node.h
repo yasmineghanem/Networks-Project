@@ -40,27 +40,28 @@ using namespace omnetpp;
 class Node : public cSimpleModule
 {
 private:
-  int nodeID;
+  int nodeID; // the id of the node
 
 protected:
   // sender
-  std::vector<std::string> messagesToSend;
-  std::vector<std::string> errorCodes;
-  std::vector<std::pair<bool, CustomMessage_Base *>> timers;
-  bool expectedACK;
-  bool resending;
+  std::vector<std::string> messagesToSend;                   // messages queue that should be processed and sent
+  std::vector<std::string> errorCodes;                       // the error codes corresponding tpo each message
+  std::vector<std::pair<bool, CustomMessage_Base *>> timers; // the timers for each message sent
+  bool expectedACK;                                          // bool to indicate whether the received ACK is the expected one by the sender
+  bool resending;                                            // bool that indicates if the message being sent has been sent before
 
   // receiver
-  std::vector<CustomMessage_Base *> receivedMessages;
-  int n_ackNumber = 0;
-  bool nackSent = false;
+  std::vector<CustomMessage_Base *> receivedMessages; // a vector containing the received messages
+  int n_ackNumber = 0;                                // the expected ack number
+  bool nackSent = false;                              // bool indicating if a NACK has been sent by the receiver
 
   // system indices
-  int startWindow;
-  int endWindow;
+  int startWindow; // the start index of the sending window
+  int endWindow;   // the end index of the sending window
   int currentIndex;
 
   // system pointers
+
   // messages pointers
   std::vector<std::string>::iterator start;
   std::vector<std::string>::iterator end;
@@ -71,20 +72,20 @@ protected:
   // std::vector<std::string>::iterator endError;
   // std::vector<std::string>::iterator currentError;
 
-  // timers
+  // timers indices
   int startTimer;
   int endTimer;
 
   // shared variables
-  static int sender;
+  static int sender; // the ID of the sending node
 
   // system parameters
-  int WS;
+  int WS;    // sender's window size
   double PT; // message processing time
   double ED; // message error delay
   double TD; // message transmission delay
   double DD; // message duplication delay
-  double TO; // timeout
+  double TO; // timeout duration
   double LP; // ack/nack loss probabilty
 
   virtual void initialize();
@@ -96,33 +97,33 @@ public:
   virtual ~Node();
 
   // main functions
-  void processDataToSend();
-  void processReceivedData(CustomMessage_Base *msg);
-  void sendAck();
-  void sendNack();
-  bool receiveAck(CustomMessage_Base *msg);
-  void receiveNack(CustomMessage_Base *msg);
+  void processDataToSend();                          // processes the next frame to be sent
+  void processReceivedData(CustomMessage_Base *msg); // processes the received frame
+  void sendAck();                                    // sends the ACK on the correct received message
+  void sendNack();                                   // sends NACK for the errored message
+  bool receiveAck(CustomMessage_Base *msg);          // receives the ACK and update window indices
+  void receiveNack(CustomMessage_Base *msg);         // receives NACK and updtaes current index
 
   // GoBackN protocol functions
-  void addHeader(std::string message);                                                                   // TODO: adds the header to the message to be sent
-  std::string frameMessage(std::string message);                                                         // TODO: takes a message and frames it using byte stuffing
-  std::bitset<8> calculateChecksum(std::string message);                                                 // TODO: calculates the message checksum as an error detection technique
-  bool detectError(std::string message, int checksum);                                                   // TODO: calculates the message checksum as an error detection technique
-  void getErrors(std::string errorCode, bool &modification, bool &loss, bool &duplication, bool &delay); // TODO: given an error code handles the message accordingly
-  void handleErrors(std::string errorCode, CustomMessage_Base *msg);                                     // TODO: given an error code handles the message accordingly
-  std::string deframeMessage(std::string message);                                                       // TODO: defram the received message
-  int modifyMessage(CustomMessage_Base *msg);
-  bool checkDuplicate(CustomMessage_Base *msg);
-  bool loseAck(double LP);
-  void handleTimeout(CustomMessage_Base *msg);
-  void resendTimeoutMessages(int seq_num);
+  void addHeader(std::string message);                                                                   // adds the header to the message to be sent
+  std::string frameMessage(std::string message);                                                         // takes a message and frames it using byte stuffing
+  std::bitset<8> calculateChecksum(std::string message);                                                 // calculates the message checksum as an error detection technique
+  bool detectError(std::string message, int checksum);                                                   // calculates the message checksum as an error detection technique
+  void getErrors(std::string errorCode, bool &modification, bool &loss, bool &duplication, bool &delay); // given an error code handles the message accordingly
+  void handleErrors(std::string errorCode, CustomMessage_Base *msg);                                     // given an error code handles the message accordingly
+  std::string deframeMessage(std::string message);                                                       // deframes the received message
+  int modifyMessage(CustomMessage_Base *msg);                                                            // modifies the message to simulate the frame being corrupted
+  bool checkDuplicate(CustomMessage_Base *msg);                                                          // checks if the received frame has been received before
+  bool loseAck(double LP);                                                                               // simulates the losing of the ACK/NACK
+  void handleTimeout(CustomMessage_Base *msg);                                                           // starts the timer for the given frame to be sent
+  void resendTimeoutMessages(int seq_num);                                                               // updates the current index to resend messages when they timeout
 
   // utility functions
   void readFile(std::string fileName);
-  std::vector<std::bitset<8>> convertToBinary(std::string String); // TODO: converts any given string to binary
-  void sendMessage(std::string message, int time);                 // TODO: send the given message at the specified time
-  bool fullAdder(bool, bool, bool &);
-  std::bitset<8> byteAdder(std::bitset<8>, std::bitset<8>);
+  std::vector<std::bitset<8>> convertToBinary(std::string String); // converts any given string to binary
+  void sendMessage(std::string message, int time);                 // send the given message at the specified time
+  bool fullAdder(bool, bool, bool &);                              // adds two bits with carry
+  std::bitset<8> byteAdder(std::bitset<8>, std::bitset<8>);        // adds two bytes given in binary format
 };
 
 #endif

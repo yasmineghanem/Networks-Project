@@ -25,15 +25,13 @@ class Logger
 public:
     Logger();
     virtual ~Logger();
-    static void open(const std::string &logFile);
-    static void close();
-    // write message
-    static void write(const std::string &message);
+    static void open(const std::string &logFile);  // opens the given file
+    static void close();                           // closes the file instance
+    static void write(const std::string &message); // writes the given message to the file
 
 private:
-    std::ofstream fileStream;
-    // Logger instance (singleton)
-    static Logger instance;
+    std::ofstream fileStream; // object of fileStream to handle the file
+    static Logger instance;   // the instance that handles the file operations
 };
 
 #endif /* LOGGER_H_ */
