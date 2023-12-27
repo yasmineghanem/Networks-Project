@@ -1,0 +1,139 @@
+- Timeout 
+- NACk retransmit
+- 4 types of errors 
+- ack loss
+- nack loss
+- nenene
+
+[Modification, Loss, Duplication, Delay] 
+
+------------------------------------
+# DONE #
+T1:
+
+simple timeout at sender
+ED=15
+TO=10
+LP=0.0
+
+0011 A
+
+notes: just a simple timeout 
+
+------------------------------------
+# DONE # => infinite loop
+T2:
+
+Try the same as previous but with larger LP
+LP= 0.9
+
+Notes: will keep timeouting and resending many times.
+
+-------------------------------------
+# DONE # => infinite loop when LP=0.9
+T3:
+
+msg_loss timeout and then nack 
+
+0100 A
+1000 B
+-----
+try it with LP=0.0 and LP=0.9 for a severe loss of data
+
+-------------------------------------
+# DONE #
+T4:
+same msg in T3 but repeated many times for robustness
+
+0100 A
+1000 B
+0100 A
+1000 B
+0100 A
+1000 B
+0100 A
+1000 B
+0100 A
+1000 B
+
+note: there should be a timeout on every msg with "A"
+-------------------------------------
+# DONE #
+T5:
+Lost-delyed and then Modified
+
+
+0100 A
+0001 B
+1000 C
+
+in my case, 2 timeouts happened on A and C without any nacks (C is cleared from errors by the timeout)
+
+-------------------------------------
+# DONE #
+T6: 
+
+same as T5 but with C lost
+
+0100 A
+0001 B
+1100 C
+
+-> output should be almost the same as T5
+
+-------------------------------------
+# DONE #
+T7:
+3 modified msgs
+
+1000 A
+1000 B
+1000 C
+
+-------------------------------------
+# DONE #
+T8:
+
+1000 A
+0000 B
+0011 C
+
+with LP=0.9
+to see lost nacks and lost acks
+-------------------------------------
+# DONE # => duplicates
+T9:
+seq of correct msgs with LP=0.7 to see the effect of accumulated Acks 
+There should be just few timeouts as the few acks received will clear the timeouts
+For me, there was just 3 timeouts
+
+0000 A
+0000 B
+0000 C
+0000 C
+0000 C
+0000 C
+0000 C
+0000 C
+0000 C
+0000 C
+
+-------------------------------------
+# DONE #
+T10:
+seq of delayed and duplicated msgs 
+
+0011 A
+0011 B
+0011 C
+0011 C
+0011 C
+0011 C
+0011 C
+0011 C
+0011 C
+0011 C
+
+There should be ZERO timeouts if ED < TO which is the normal 
+
+-------------------------------------

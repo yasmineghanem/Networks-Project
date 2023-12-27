@@ -1,0 +1,100 @@
+At time [0] NODE[0] started processing, introducing channel error with CODE[0011]
+
+At time [0.5] NODE[0] [SENT] frame with SEQ_NUM[0] and PAYLOAD[$A$] and TRAILER[01110110] MODIFIED [-1], LOST [No], DUPLICATE [1], DELAY [4.000000]
+
+At time [0.6] NODE[0] [SENT] frame with SEQ_NUM[0] and PAYLOAD[$A$] and TRAILER[01110110] MODIFIED [-1], LOST [No], DUPLICATE [2], DELAY [4.000000]
+
+At time [0.5] NODE[0] started processing, introducing channel error with CODE[0011]
+
+At time [1] NODE[0] [SENT] frame with SEQ_NUM[1] and PAYLOAD[$B$] and TRAILER[01110101] MODIFIED [-1], LOST [No], DUPLICATE [1], DELAY [4.000000]
+
+At time [1.1] NODE[0] [SENT] frame with SEQ_NUM[1] and PAYLOAD[$B$] and TRAILER[01110101] MODIFIED [-1], LOST [No], DUPLICATE [2], DELAY [4.000000]
+
+At time [1] NODE[0] started processing, introducing channel error with CODE[0011]
+
+At time [1.5] NODE[0] [SENT] frame with SEQ_NUM[2] and PAYLOAD[$C$] and TRAILER[01110100] MODIFIED [-1], LOST [No], DUPLICATE [1], DELAY [4.000000]
+
+At time [1.6] NODE[0] [SENT] frame with SEQ_NUM[2] and PAYLOAD[$C$] and TRAILER[01110100] MODIFIED [-1], LOST [No], DUPLICATE [2], DELAY [4.000000]
+
+At time [1.5] NODE[0] started processing, introducing channel error with CODE[0011]
+
+At time [2] NODE[0] [SENT] frame with SEQ_NUM[3] and PAYLOAD[$C$] and TRAILER[01110100] MODIFIED [-1], LOST [No], DUPLICATE [1], DELAY [4.000000]
+
+At time [2.1] NODE[0] [SENT] frame with SEQ_NUM[3] and PAYLOAD[$C$] and TRAILER[01110100] MODIFIED [-1], LOST [No], DUPLICATE [2], DELAY [4.000000]
+
+UPLOADING PAYLOAD[A] with SEQ_NUM[0] to the network layer at time [5.5] NODE[1]
+
+At time [6] NODE[1] sending [ACK] with NUMBER[1] and LOSS[NO] 
+
+UPLOADING PAYLOAD[B] with SEQ_NUM[1] to the network layer at time [6] NODE[1]
+
+At time [6.5] NODE[1] sending [ACK] with NUMBER[2] and LOSS[NO] 
+
+UPLOADING PAYLOAD[C] with SEQ_NUM[2] to the network layer at time [6.5] NODE[1]
+
+At time [7] NODE[1] sending [ACK] with NUMBER[3] and LOSS[NO] 
+
+UPLOADING PAYLOAD[C] with SEQ_NUM[3] to the network layer at time [7] NODE[1]
+
+At time [7] NODE[0] started processing, introducing channel error with CODE[0011]
+
+At time [7.5] NODE[1] sending [ACK] with NUMBER[4] and LOSS[NO] 
+
+At time [7.5] NODE[0] [SENT] frame with SEQ_NUM[4] and PAYLOAD[$C$] and TRAILER[01110100] MODIFIED [-1], LOST [No], DUPLICATE [1], DELAY [4.000000]
+
+At time [7.6] NODE[0] [SENT] frame with SEQ_NUM[4] and PAYLOAD[$C$] and TRAILER[01110100] MODIFIED [-1], LOST [No], DUPLICATE [2], DELAY [4.000000]
+
+At time [7.5] NODE[0] started processing, introducing channel error with CODE[0011]
+
+At time [8] NODE[0] [SENT] frame with SEQ_NUM[0] and PAYLOAD[$C$] and TRAILER[01110100] MODIFIED [-1], LOST [No], DUPLICATE [1], DELAY [4.000000]
+
+At time [8.1] NODE[0] [SENT] frame with SEQ_NUM[0] and PAYLOAD[$C$] and TRAILER[01110100] MODIFIED [-1], LOST [No], DUPLICATE [2], DELAY [4.000000]
+
+At time [8] NODE[0] started processing, introducing channel error with CODE[0011]
+
+At time [8.5] NODE[0] [SENT] frame with SEQ_NUM[1] and PAYLOAD[$C$] and TRAILER[01110100] MODIFIED [-1], LOST [No], DUPLICATE [1], DELAY [4.000000]
+
+At time [8.6] NODE[0] [SENT] frame with SEQ_NUM[1] and PAYLOAD[$C$] and TRAILER[01110100] MODIFIED [-1], LOST [No], DUPLICATE [2], DELAY [4.000000]
+
+At time [8.5] NODE[0] started processing, introducing channel error with CODE[0011]
+
+At time [9] NODE[0] [SENT] frame with SEQ_NUM[2] and PAYLOAD[$C$] and TRAILER[01110100] MODIFIED [-1], LOST [No], DUPLICATE [1], DELAY [4.000000]
+
+At time [9.1] NODE[0] [SENT] frame with SEQ_NUM[2] and PAYLOAD[$C$] and TRAILER[01110100] MODIFIED [-1], LOST [No], DUPLICATE [2], DELAY [4.000000]
+
+UPLOADING PAYLOAD[C] with SEQ_NUM[4] to the network layer at time [12.5] NODE[1]
+
+At time [13] NODE[1] sending [ACK] with NUMBER[0] and LOSS[NO] 
+
+UPLOADING PAYLOAD[C] with SEQ_NUM[0] to the network layer at time [13] NODE[1]
+
+At time [13.5] NODE[1] sending [ACK] with NUMBER[1] and LOSS[NO] 
+
+UPLOADING PAYLOAD[C] with SEQ_NUM[1] to the network layer at time [13.5] NODE[1]
+
+At time [14] NODE[1] sending [ACK] with NUMBER[2] and LOSS[NO] 
+
+UPLOADING PAYLOAD[C] with SEQ_NUM[2] to the network layer at time [14] NODE[1]
+
+At time [14] NODE[0] started processing, introducing channel error with CODE[0011]
+
+At time [14.5] NODE[1] sending [ACK] with NUMBER[3] and LOSS[NO] 
+
+At time [14.5] NODE[0] [SENT] frame with SEQ_NUM[3] and PAYLOAD[$C$] and TRAILER[01110100] MODIFIED [-1], LOST [No], DUPLICATE [1], DELAY [4.000000]
+
+At time [14.6] NODE[0] [SENT] frame with SEQ_NUM[3] and PAYLOAD[$C$] and TRAILER[01110100] MODIFIED [-1], LOST [No], DUPLICATE [2], DELAY [4.000000]
+
+At time [14.5] NODE[0] started processing, introducing channel error with CODE[0011]
+
+At time [15] NODE[0] [SENT] frame with SEQ_NUM[4] and PAYLOAD[$C$] and TRAILER[01110100] MODIFIED [-1], LOST [No], DUPLICATE [1], DELAY [4.000000]
+
+At time [15.1] NODE[0] [SENT] frame with SEQ_NUM[4] and PAYLOAD[$C$] and TRAILER[01110100] MODIFIED [-1], LOST [No], DUPLICATE [2], DELAY [4.000000]
+
+UPLOADING PAYLOAD[C] with SEQ_NUM[3] to the network layer at time [19.5] NODE[1]
+
+At time [20] NODE[1] sending [ACK] with NUMBER[4] and LOSS[NO] 
+
+UPLOADING PAYLOAD[C] with SEQ_NUM[4] to the network layer at time [20] NODE[1]
+
+At time [20.5] NODE[1] sending [ACK] with NUMBER[0] and LOSS[NO] 
+

@@ -1,0 +1,50 @@
+At time [0] NODE[0] started processing, introducing channel error with CODE[1000]
+
+At time [0.5] NODE[0] [SENT] frame with SEQ_NUM[0] and PAYLOAD[$E$] and TRAILER[01110110] MODIFIED [13], LOST [No], DUPLICATE [0], DELAY [0] 
+
+At time [0.5] NODE[0] started processing, introducing channel error with CODE[0000]
+
+At time [1] NODE[0] [SENT] frame with SEQ_NUM[1] and PAYLOAD[$B$] and TRAILER[01110101] Modified [-1], Lost [No], Duplicate [0], Delay [0] 
+
+At time [1] NODE[0] started processing, introducing channel error with CODE[0011]
+
+At time [1.5] NODE[0] [SENT] frame with SEQ_NUM[2] and PAYLOAD[$C$] and TRAILER[01110100] MODIFIED [-1], LOST [No], DUPLICATE [1], DELAY [4.000000]
+
+At time [1.6] NODE[0] [SENT] frame with SEQ_NUM[2] and PAYLOAD[$C$] and TRAILER[01110100] MODIFIED [-1], LOST [No], DUPLICATE [2], DELAY [4.000000]
+
+At time [2] NODE[1] sending [NACK] with NUMBER[0] and LOSS[YES] 
+
+At time [2.5] NODE[1] sending [ACK] with NUMBER[0] and LOSS[NO] 
+
+At time [7] NODE[1] sending [ACK] with NUMBER[0] and LOSS[YES] 
+
+At time [7.1] NODE[1] sending [ACK] with NUMBER[0] and LOSS[NO] 
+
+TIMEOUT event at [10.5] at NODE[0] for frame with SEQ_NUM[0]
+
+At time [10.5] NODE[0] started processing, introducing channel error with CODE[0000]
+
+At time [11] NODE[0] [SENT] frame with SEQ_NUM[0] and PAYLOAD[$A$] and TRAILER[01110110] Modified [-1], Lost [No], Duplicate [0], Delay [0] 
+
+At time [11] NODE[0] started processing, introducing channel error with CODE[0000]
+
+At time [11.5] NODE[0] [SENT] frame with SEQ_NUM[1] and PAYLOAD[$B$] and TRAILER[01110101] Modified [-1], Lost [No], Duplicate [0], Delay [0] 
+
+At time [11.5] NODE[0] started processing, introducing channel error with CODE[0011]
+
+At time [12] NODE[0] [SENT] frame with SEQ_NUM[2] and PAYLOAD[$C$] and TRAILER[01110100] MODIFIED [-1], LOST [No], DUPLICATE [1], DELAY [4.000000]
+
+At time [12.1] NODE[0] [SENT] frame with SEQ_NUM[2] and PAYLOAD[$C$] and TRAILER[01110100] MODIFIED [-1], LOST [No], DUPLICATE [2], DELAY [4.000000]
+
+UPLOADING PAYLOAD[A] with SEQ_NUM[0] to the network layer at time [12] NODE[1]
+
+At time [12.5] NODE[1] sending [ACK] with NUMBER[1] and LOSS[YES] 
+
+UPLOADING PAYLOAD[B] with SEQ_NUM[1] to the network layer at time [12.5] NODE[1]
+
+At time [13] NODE[1] sending [ACK] with NUMBER[2] and LOSS[NO] 
+
+UPLOADING PAYLOAD[C] with SEQ_NUM[2] to the network layer at time [17] NODE[1]
+
+At time [17.5] NODE[1] sending [ACK] with NUMBER[3] and LOSS[NO] 
+
