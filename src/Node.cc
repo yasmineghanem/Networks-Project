@@ -109,8 +109,8 @@ void Node::handleMessage(cMessage *msg)
                 std::string log = "TIMEOUT event at [" + simTime().str() + "] at NODE[" + std::to_string(nodeID) + "] for frame with SEQ_NUM[" + std::to_string(receivedMessage->getHeader()) + "]\n";
                 Logger::write(log);
 
-                // start resending all the messages in the window
-                resendTimeoutMessages(receivedMessage->getHeader());
+                // updates the current index of the messages queue to resend all the messages in the window after and including the timed out message
+                resendMessages(receivedMessage->getHeader());
 
                 processDataToSend();
             }
@@ -123,10 +123,10 @@ void Node::handleMessage(cMessage *msg)
                     EV << receivedMessage->getPayload() << " DONE PROCESSING AT " << simTime() << endl;
 
                     // schedule the data to be sent according to the errors read with the messages
-                    handleErrors(errorCodes[currentIndex], receivedMessage);
+                    sendMessage(errorCodes[currentIndex], receivedMessage);
 
                     // start the timer for the sent message
-                    handleTimeout(receivedMessage);
+                    startTimer(receivedMessage);
 
                     // increment the current index to process the next message
                     if (current <= end)
@@ -165,8 +165,8 @@ void Node::handleMessage(cMessage *msg)
             {
                 EV << "RECEIVED NACK NUMBER " << receivedMessage->getAckNack() << " AT " << simTime() << endl;
 
-                // receive the ACK and update parameters accordingly
-                receiveNack(receivedMessage);
+                // updates the current index of the message queue to the resend the errored message + all subsequent messages in the window
+                resendMessages(receivedMessage->getAckNack());
 
                 // bool to indicate whether this is the first time sending the message of the sender is reseinding the message
                 resending = true;
@@ -188,7 +188,7 @@ void Node::handleMessage(cMessage *msg)
                 if (strcmp(receivedMessage->getName(), "End Processing") == 0) // the ACK/NACK has finished processing and should be sent after the specified  delay
                 {
                     // handle if the ACK/NACK is supposed to be lost
-                    bool lost = loseAck(LP);
+                    bool lost = isLost(LP);
 
                     // variables for writing in the log file according to the type of the message (ACK or NACK)
                     std::string messageType;
@@ -354,7 +354,7 @@ void Node::processReceivedData(CustomMessage_Base *msg)
         // send ACK with the message we're waiting for
 
         // check if the message was received before
-        bool duplicate = checkDuplicate(msg);
+        bool duplicate = isDuplicate(msg);
         EV << duplicate << endl;
 
         if (duplicate) // if the message is duplicated then we don't send ACKS/NACKS (throw the message)
@@ -379,7 +379,7 @@ void Node::processReceivedData(CustomMessage_Base *msg)
     std::string receivedPayload = receivedMessage->getPayload();
 
     // check if the message contains any errors by calculating the checksum
-    bool error = detectError(receivedPayload, receivedMessage->getTrailer());
+    bool error = detectMessageError(receivedPayload, receivedMessage->getTrailer());
     EV << "ERROR DETECTED: " << error << endl;
 
     if (error) // if the message contains an error
@@ -557,79 +557,6 @@ bool Node::receiveAck(CustomMessage_Base *msg)
     return true;
 }
 
-/**
- * @brief Process the ACK and schedule to send it
- *
- * Steps:
- * 1. create a new cMessage
- * 2. set it's frametype and the ACK number accordingly
- * 3. set the parameter nackSent to indicate that a NACK has been sent => avoids sending multiple NACKs for the same message
- * 4. schedule the NACK to be sent after processing
- *
- * @param msg the received frame from the sender casted to our CustomMessage
- **/
-void Node::receiveNack(CustomMessage_Base *msg)
-{
-    // TODO: receive the nack from the receiver
-    int NACK = msg->getAckNack();
-    EV << "RECEIVED NACK: " << NACK << endl;
-    // adjust the current index and the window start and end inidices
-    currentIndex = startWindow;
-    current = start;
-    while (currentIndex % (WS + 1) != NACK)
-    {
-        current++;
-        currentIndex = currentIndex + 1;
-    }
-    // adjust the error code of the nack frame -> avoid infinate loop
-    errorCodes[currentIndex] = "0000";
-
-    // cancel timers for all messages in the window
-    for (int i = 0; i < WS + 1; i++)
-    {
-        EV << "CANCELING TIMEOUT MESSAGES" << endl;
-        if (timers[i].first == true)
-        {
-            EV << "CANCELLING MESSAGE WITH SEQ_NUM " << i << " AND PAYLOAD " << timers[i].second->getName() << endl;
-            cancelEvent(timers[i].second);
-            // delete timers[i].first;
-            timers[i].first = false;
-        }
-    }
-    // EV << "START TIMER " << startTimer << " END TIMER " << endTimer << endl;
-
-    // int index = startTimer;
-
-    // EV << "CANCELING TIMEOUT MESSAGES" << endl;
-
-    // while ((index % (WS + 1)) != endTimer)
-    // {
-
-    //     if (timers[index].first != 0)
-    //     {
-
-    //         EV << "CANCELLING MESSAGE WITH SEQ_NUM " << index << " AND PAYLOAD " << timers[index].first->getPayload() << endl;
-
-    //         cancelEvent(timers[index].second);
-
-    //         timers[index].first = 0;
-    //     }
-    //     index = index + 1;
-    // }
-
-    // if (timers[index].first != 0)
-    // {
-
-    //     EV << "CANCELLING MESSAGE WITH SEQ_NUM " << index << " AND PAYLOAD " << timers[index].first->getPayload() << endl;
-
-    //     cancelEvent(timers[index].second);
-
-    //     timers[index].first = 0;
-    // }
-
-    cancelAndDelete(msg);
-}
-
 // ---------------------------------- FILE FUNCTIONS ---------------------------------- //
 
 /**
@@ -784,7 +711,7 @@ std::bitset<8> Node::calculateChecksum(std::string message)
  * @param checksum the checksum sent with the message (calculated at the sender's side)
  * @return bool whether the message contains an error or not
  */
-bool Node::detectError(std::string message, int checksum)
+bool Node::detectMessageError(std::string message, int checksum)
 {
     // TODO: calcuate the checksum at the receiver to detect if there's an error
 
@@ -857,7 +784,7 @@ void Node::getErrors(std::string errorCode, bool &modification, bool &loss, bool
  * @param errorCode the error code associated with the frame that should be sent
  * @param msg the frame that should be sent
  **/
-void Node::handleErrors(std::string errorCode, CustomMessage_Base *msg)
+void Node::sendMessage(std::string errorCode, CustomMessage_Base *msg)
 {
     // error bits
     bool modification = false;
@@ -1111,7 +1038,7 @@ int Node::modifyMessage(CustomMessage_Base *msg) // get the payload of the frame
  * @param msg the frame that should be sent
  * @return bool whether the message is a duplicate or not
  */
-bool Node::checkDuplicate(CustomMessage_Base *msg)
+bool Node::isDuplicate(CustomMessage_Base *msg)
 {
     // get the original payload of the message first
     std::string deframedMessage = deframeMessage(msg->getPayload());
@@ -1147,7 +1074,7 @@ bool Node::checkDuplicate(CustomMessage_Base *msg)
  * @param LP the loss probability specified in the initial of the program
  * @return bool whether the ACK should be list or not
  */
-bool Node::loseAck(double LP)
+bool Node::isLost(double LP)
 {
     srand(static_cast<int>(simTime().inUnit(SIMTIME_S) + 0.5)); // changes the seed according to the time of the program
 
@@ -1176,7 +1103,7 @@ bool Node::loseAck(double LP)
  *
  * @param msg the frame that should be sent
  */
-void Node::handleTimeout(CustomMessage_Base *msg)
+void Node::startTimer(CustomMessage_Base *msg)
 {
     // get the sequence number of the frame
     int sequenceNumber = msg->getHeader();
@@ -1198,13 +1125,10 @@ void Node::handleTimeout(CustomMessage_Base *msg)
 /**
  * @brief Updates current index to resend the messages in the window
  *
- * @param sequenceNumber the sequence number of the frame for which the timer timed out
+ * @param sequenceNumber the sequence number of the frame from which we need to start resending
  */
-void Node::resendTimeoutMessages(int sequenceNumber)
+void Node::resendMessages(int sequenceNumber)
 {
-
-    EV << "TIMEOUT  " << endl;
-
     // move the current index to the message that timed out in the window
     currentIndex = startWindow;
     current = start;
@@ -1227,7 +1151,6 @@ void Node::resendTimeoutMessages(int sequenceNumber)
 
     while (index != endTimer)
     {
-
         if (timers[index].first) // if a timer has started for the message with the same sequence number
         {
             EV << "CANCELLING MESSAGE WITH SEQ_NUM " << index << " AND PAYLOAD " << timers[index].first << endl;
@@ -1240,7 +1163,6 @@ void Node::resendTimeoutMessages(int sequenceNumber)
 
     // handles the last element as the loop exits when it reaches the end timer index without cancelling it
     index = index % (WS + 1);
-
     if (timers[index].first)
     {
         EV << "CANCELLING MESSAGE WITH SEQ_NUM " << index << " AND PAYLOAD " << timers[index].first << endl;

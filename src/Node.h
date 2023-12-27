@@ -102,21 +102,20 @@ public:
   void sendAck();                                    // sends the ACK on the correct received message
   void sendNack();                                   // sends NACK for the errored message
   bool receiveAck(CustomMessage_Base *msg);          // receives the ACK and update window indices
-  void receiveNack(CustomMessage_Base *msg);         // receives NACK and updtaes current index
 
   // GoBackN protocol functions
   void addHeader(std::string message);                                                                   // adds the header to the message to be sent
   std::string frameMessage(std::string message);                                                         // takes a message and frames it using byte stuffing
   std::bitset<8> calculateChecksum(std::string message);                                                 // calculates the message checksum as an error detection technique
-  bool detectError(std::string message, int checksum);                                                   // calculates the message checksum as an error detection technique
+  bool detectMessageError(std::string message, int checksum);                                            // calculates the message checksum as an error detection technique
   void getErrors(std::string errorCode, bool &modification, bool &loss, bool &duplication, bool &delay); // given an error code handles the message accordingly
-  void handleErrors(std::string errorCode, CustomMessage_Base *msg);                                     // given an error code handles the message accordingly
+  void sendMessage(std::string errorCode, CustomMessage_Base *msg);                                      // given an error code handles the message accordingly
   std::string deframeMessage(std::string message);                                                       // deframes the received message
   int modifyMessage(CustomMessage_Base *msg);                                                            // modifies the message to simulate the frame being corrupted
-  bool checkDuplicate(CustomMessage_Base *msg);                                                          // checks if the received frame has been received before
-  bool loseAck(double LP);                                                                               // simulates the losing of the ACK/NACK
-  void handleTimeout(CustomMessage_Base *msg);                                                           // starts the timer for the given frame to be sent
-  void resendTimeoutMessages(int seq_num);                                                               // updates the current index to resend messages when they timeout
+  bool isDuplicate(CustomMessage_Base *msg);                                                             // checks if the received frame has been received before
+  bool isLost(double LP);                                                                                // simulates the losing of the ACK/NACK
+  void startTimer(CustomMessage_Base *msg);                                                              // starts the timer for the given frame to be sent
+  void resendMessages(int sequenceNumber);                                                               // updates the current index to resend messages when they timeout
 
   // utility functions
   void readFile(std::string fileName);
