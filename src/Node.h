@@ -46,13 +46,13 @@ protected:
   // sender
   std::vector<std::string> messagesToSend;
   std::vector<std::string> errorCodes;
-  std::vector<std::pair<CustomMessage_Base *, CustomMessage_Base *>> timers;
-  std::vector<bool> acks;
+  std::vector<std::pair<bool, CustomMessage_Base *>> timers;
+  bool expectedACK;
+  bool resending;
 
   // receiver
   std::vector<CustomMessage_Base *> receivedMessages;
   int n_ackNumber = 0;
-  int expectedFrameNack;
   bool nackSent = false;
 
   // system indices
@@ -67,9 +67,9 @@ protected:
   std::vector<std::string>::iterator current;
 
   // error codes pointers
-  std::vector<std::string>::iterator startError;
-  std::vector<std::string>::iterator endError;
-  std::vector<std::string>::iterator currentError;
+  // std::vector<std::string>::iterator startError;
+  // std::vector<std::string>::iterator endError;
+  // std::vector<std::string>::iterator currentError;
 
   // timers
   int startTimer;
@@ -100,11 +100,8 @@ public:
   void processReceivedData(CustomMessage_Base *msg);
   void sendAck();
   void sendNack();
-  void receiveAck(CustomMessage_Base *msg);
+  bool receiveAck(CustomMessage_Base *msg);
   void receiveNack(CustomMessage_Base *msg);
-
-  // dealing with files functions
-  void readFile(std::string fileName);
 
   // GoBackN protocol functions
   void addHeader(std::string message);                                                                   // TODO: adds the header to the message to be sent
@@ -121,6 +118,7 @@ public:
   void resendTimeoutMessages(int seq_num);
 
   // utility functions
+  void readFile(std::string fileName);
   std::vector<std::bitset<8>> convertToBinary(std::string String); // TODO: converts any given string to binary
   void sendMessage(std::string message, int time);                 // TODO: send the given message at the specified time
   bool fullAdder(bool, bool, bool &);
