@@ -518,29 +518,21 @@ bool Node::receiveAck(CustomMessage_Base *msg)
             timers[i].first = false;       // set its parameter to false
 
             // slide the window to the right one step
-            startWindow++;
-            start++;
-
             // checks that the end of the window still didn't reach the end of the messages
             // if it is at the end then we shouldn't increment it
             if (end < --messagesToSend.end()) // if the end index still hasn't reached the end of the messages
             {
+                // increment the start window index
+                startWindow++;
+                start++;
+
                 // increment the end window index
                 endWindow++;
                 end++;
             }
-            else // the end index has reached the end of the messages vector
-            {
-                // handles that the start window should not slide as well
-                if (start > messagesToSend.end() - WS - 1)
-                {
-                    startWindow--;
-                    start--;
-                }
-            }
-            messagesCancelled++;
+            messagesCancelled++; // increment the messages cancelled => this handles if the received ack is not the expected one
         }
-        else
+        else // then all the previous timers are cancelled as well => break from the loop
         {
             break;
         }
@@ -548,6 +540,7 @@ bool Node::receiveAck(CustomMessage_Base *msg)
 
     EV << "NUMBER OF MESSAGES CANCELLED: " << messagesCancelled << endl;
 
+    // adjust the indices of the timer vector according to the number of messages cancelled (ACKed)
     startTimer = (startTimer + messagesCancelled) % (WS + 1);
     endTimer = (endTimer + messagesCancelled) % (WS + 1);
 
@@ -555,10 +548,12 @@ bool Node::receiveAck(CustomMessage_Base *msg)
     EV << "END TIMER INDEX " << endTimer << endl;
 
     EV << "DONE CANCELLING" << endl;
-    cancelAndDelete(msg);
+    cancelAndDelete(msg); // camcel and delete the message received
 
-    if (messagesCancelled == 0)
+    if (messagesCancelled == 0) // if no messages were cancelled then the received ACK is not the expected ACK
         return false;
+
+    // the received ACK is the expected one
     return true;
 }
 
