@@ -114,7 +114,7 @@ public:
   int modifyMessage(CustomMessage_Base *msg);                                                            // modifies the message to simulate the frame being corrupted
   bool isDuplicate(CustomMessage_Base *msg);                                                             // checks if the received frame has been received before
   bool isLost(double LP);                                                                                // simulates the losing of the ACK/NACK
-  void startTimer(CustomMessage_Base *msg);                                                              // starts the timer for the given frame to be sent
+  void startMessageTimer(CustomMessage_Base *msg);                                                              // starts the timer for the given frame to be sent
   void resendMessages(int sequenceNumber);                                                               // updates the current index to resend messages when they timeout
 
   // utility functions

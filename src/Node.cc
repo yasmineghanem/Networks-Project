@@ -126,7 +126,7 @@ void Node::handleMessage(cMessage *msg)
                     sendMessage(errorCodes[currentIndex], receivedMessage);
 
                     // start the timer for the sent message
-                    startTimer(receivedMessage);
+                    startMessageTimer(receivedMessage);
 
                     // increment the current index to process the next message
                     if (current <= end)
@@ -1103,7 +1103,7 @@ bool Node::isLost(double LP)
  *
  * @param msg the frame that should be sent
  */
-void Node::startTimer(CustomMessage_Base *msg)
+void Node::startMessageTimer(CustomMessage_Base *msg)
 {
     // get the sequence number of the frame
     int sequenceNumber = msg->getHeader();
