@@ -715,29 +715,13 @@ bool Node::detectMessageError(std::string message, int checksum)
 {
     // TODO: calcuate the checksum at the receiver to detect if there's an error
 
-    std::vector<std::bitset<8>> sums; // stores the sums of each byte with the next one
-    std::bitset<8> zero(0);           // used as an initialization and comparator
+    std::bitset<8> zero(0); // used as a comparator
 
-    sums.push_back(zero); // add the zero to the start of the vector to add it to the first byte
+    std::bitset<8> receivedChecksum(checksum); // the received parity byte in the frame trailer
 
-    // convert sent received checksum to its binary representaion
-    std::bitset<8> receivedChecksum(checksum);
+    std::bitset<8> calculatedChecksum = calculateChecksum(message).flip(); // function call to calcuate the checksum of the received frame payload
 
-    // converts the string into its binary representaion and divides it into a vector of characters
-    // each character is represented in 8 bits
-    std::vector<std::bitset<8>> binaryMessage = this->convertToBinary(message);
-
-    int counter = 0; // initialize counter to access bytes in the sums vector
-
-    // loop on all bytes in the returned binary message
-    for (std::bitset<8> byte : binaryMessage)
-    {
-        sums.push_back(this->byteAdder(sums[counter], byte)); // adds the current byte to the previuos one
-        counter++;                                            // increment counter
-    }
-
-    // add the received checksum to the calculated checksum
-    std::bitset<8> finalSum = this->byteAdder(sums[sums.size() - 1], receivedChecksum);
+    std::bitset<8> finalSum = this->byteAdder(calculatedChecksum, receivedChecksum); // add the received checksum to the calculated checksum
 
     // get the one's complement and compare it to 0
     if (finalSum.flip() == zero)
