@@ -27,6 +27,7 @@
 #include <chrono>
 #include <thread>
 #include <memory>
+#include <algorithm>
 
 #include "customMessage_m.h"
 #include "Logger.h"
@@ -48,7 +49,6 @@ protected:
   std::vector<std::string> errorCodes;                       // the error codes corresponding tpo each message
   std::vector<std::pair<bool, CustomMessage_Base *>> timers; // the timers for each message sent
   bool expectedACK;                                          // bool to indicate whether the received ACK is the expected one by the sender
-  bool resending;                                            // bool that indicates if the message being sent has been sent before
 
   // receiver
   std::vector<CustomMessage_Base *> receivedMessages; // a vector containing the received messages
@@ -61,16 +61,10 @@ protected:
   int currentIndex;
 
   // system pointers
-
   // messages pointers
   std::vector<std::string>::iterator start;
   std::vector<std::string>::iterator end;
   std::vector<std::string>::iterator current;
-
-  // error codes pointers
-  // std::vector<std::string>::iterator startError;
-  // std::vector<std::string>::iterator endError;
-  // std::vector<std::string>::iterator currentError;
 
   // timers indices
   int startTimer;
@@ -114,15 +108,15 @@ public:
   int modifyMessage(CustomMessage_Base *msg);                                                            // modifies the message to simulate the frame being corrupted
   bool isDuplicate(CustomMessage_Base *msg);                                                             // checks if the received frame has been received before
   bool isLost(double LP);                                                                                // simulates the losing of the ACK/NACK
-  void startMessageTimer(CustomMessage_Base *msg);                                                              // starts the timer for the given frame to be sent
+  void startMessageTimer(CustomMessage_Base *msg);                                                       // starts the timer for the given frame to be sent
   void resendMessages(int sequenceNumber);                                                               // updates the current index to resend messages when they timeout
 
   // utility functions
   void readFile(std::string fileName);
   std::vector<std::bitset<8>> convertToBinary(std::string String); // converts any given string to binary
-  void sendMessage(std::string message, int time);                 // send the given message at the specified time
-  bool fullAdder(bool, bool, bool &);                              // adds two bits with carry
-  std::bitset<8> byteAdder(std::bitset<8>, std::bitset<8>);        // adds two bytes given in binary format
+  // void sendMessage(std::string message, int time);                 // send the given message at the specified time
+  bool fullAdder(bool, bool, bool &);                       // adds two bits with carry
+  std::bitset<8> byteAdder(std::bitset<8>, std::bitset<8>); // adds two bytes given in binary format
 };
 
 #endif

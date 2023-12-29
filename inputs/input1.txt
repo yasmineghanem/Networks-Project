@@ -1,7 +1,8 @@
-1010 first: A flower, sometimes 
-0000 second: known as a bloom or blossom in flowering plants
-0100 third: is the reproductive$ structure found  also called/ angiosperms$).
-0000 fourth: (plants of the division Magnoliophyta,  is to facilitate reproduction,
-0001 fifth: The biological function of $/a flower  
-0100 sixth: usually by providing a mechanism for Flowers may facilitate outcrossing$
-0000 seventh: $$the union of sperm with eggs.
+0000 0_$Hello$Iam
+0001 1_//your
+0010 2_networks
+0000 3_simulator
+1000 0_I hope
+1100 1_you enjoy
+0000 2_my$/company
+1010 3_Good By

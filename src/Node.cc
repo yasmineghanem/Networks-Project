@@ -168,9 +168,6 @@ void Node::handleMessage(cMessage *msg)
                 // updates the current index of the message queue to the resend the errored message + all subsequent messages in the window
                 resendMessages(receivedMessage->getAckNack());
 
-                // bool to indicate whether this is the first time sending the message of the sender is reseinding the message
-                resending = true;
-
                 // proceed with sending the messages in the queue
                 processDataToSend();
             }
@@ -309,12 +306,6 @@ void Node::processDataToSend()
     // rename the message to indicate that the message is being processed
     currentMessage->setName("End Processing");
 
-    // if (resending)
-    // {
-    //     scheduleAt(simTime() + PT + 0.001, currentMessage);
-    //     resending = false;
-    // }
-    // else
     scheduleAt(simTime() + PT, currentMessage);
 
     EV << " MESSAGE WITH SEQUENCE NUMBER " << sequenceNumber << " START PROCESSING AT " << simTime() << endl;
@@ -1060,15 +1051,15 @@ bool Node::isDuplicate(CustomMessage_Base *msg)
  */
 bool Node::isLost(double LP)
 {
-    srand(static_cast<int>(simTime().inUnit(SIMTIME_S) + 0.5)); // changes the seed according to the time of the program
+    // srand(static_cast<int>(simTime().inUnit(SIMTIME_S) + 0.5)); // changes the seed according to the time of the program
 
     double randomProbability; // random probability that will indicate if the ACK/NACK is being lost or not
 
     // changes the random probabilty for each ACK/NACK being sent
-    for (int i = 0; i < 3; i++)
-    {
-        randomProbability = ((double)rand()) / RAND_MAX;
-    }
+    // for (int i = 0; i < 3; i++)
+    // {
+    // }
+    randomProbability = ((double)rand()) / RAND_MAX;
 
     EV << "PROBABILITY: " << randomProbability << endl;
 

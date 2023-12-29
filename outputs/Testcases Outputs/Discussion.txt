@@ -80,13 +80,13 @@ At time [26.5] NODE[1] started processing, introducing channel error with CODE[0
 
 At time [27] NODE[1] [SENT] frame with SEQ_NUM[2] and PAYLOAD[$2_my/$//company$] and TRAILER[10010011] Modified [-1], Lost [No], Duplicate [0], Delay [0] 
 
-At time [27] NODE[0] sending [ACK] with NUMBER[0] and LOSS[YES] 
+At time [27] NODE[0] sending [ACK] with NUMBER[0] and LOSS[NO] 
 
 UPLOADING PAYLOAD[0_I hope] with SEQ_NUM[0] to the network layer at time [27] NODE[0]
 
 At time [27.5] NODE[0] sending [ACK] with NUMBER[1] and LOSS[NO] 
 
-At time [28.5] NODE[0] sending [ACK] with NUMBER[1] and LOSS[YES] 
+At time [28.5] NODE[0] sending [ACK] with NUMBER[1] and LOSS[NO] 
 
 At time [28.5] NODE[1] started processing, introducing channel error with CODE[1010]
 
@@ -96,7 +96,7 @@ At time [29.1] NODE[1] [SENT] frame with SEQ_NUM[3] and PAYLOAD[$3_Good Bi$] and
 
 At time [30.5] NODE[0] sending [ACK] with NUMBER[1] and LOSS[NO] 
 
-At time [30.6] NODE[0] sending [ACK] with NUMBER[1] and LOSS[YES] 
+At time [30.6] NODE[0] sending [ACK] with NUMBER[1] and LOSS[NO] 
 
 TIMEOUT event at [36.5] at NODE[1] for frame with SEQ_NUM[1]
 
@@ -116,11 +116,11 @@ At time [38.1] NODE[1] [SENT] frame with SEQ_NUM[3] and PAYLOAD[$3_Good Ây$] and
 
 UPLOADING PAYLOAD[1_you enjoy] with SEQ_NUM[1] to the network layer at time [38] NODE[0]
 
-At time [38.5] NODE[0] sending [ACK] with NUMBER[2] and LOSS[YES] 
+At time [38.5] NODE[0] sending [ACK] with NUMBER[2] and LOSS[NO] 
 
 UPLOADING PAYLOAD[2_my$/company] with SEQ_NUM[2] to the network layer at time [38.5] NODE[0]
 
-At time [39] NODE[0] sending [ACK] with NUMBER[3] and LOSS[YES] 
+At time [39] NODE[0] sending [ACK] with NUMBER[3] and LOSS[NO] 
 
 At time [39.5] NODE[0] sending [NACK] with NUMBER[3] and LOSS[NO] 
 
